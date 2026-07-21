@@ -433,6 +433,7 @@ h2 {
   .contact { padding: 110px 0 96px; }
   .hero-actions { flex-wrap: wrap; }
   .scroll-cue { display: none; }
+  .interlude-image { background-position: 78% 30%; }
 }
 
 @media (max-width: 760px) {

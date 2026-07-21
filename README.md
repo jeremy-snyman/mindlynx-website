@@ -30,7 +30,6 @@ deploy elsewhere.
 
 ## Images
 
-`public/images/hero.jpg` is exported from the original source in
-`design/hero-kayak-final.png`. `interlude.jpg` is still an interim asset recovered
-from the design file (bottom region reconstructed) — replace with the original
-seaside image, or regenerate hi-res with Higgsfield, when available.
+`public/images/hero.jpg` and `interlude.jpg` are exported from the originals in
+`design/` (`hero-kayak-final.png`, `beach_1.png`). Re-export from there if they
+ever need reprocessing.
