@@ -1,0 +1,302 @@
+---
+import '../styles/global.css';
+
+const title = 'MindLynx — Intelligence that gives something back';
+const description =
+  'MindLynx builds intelligence that gives people more ownership of their time, knowledge and future.';
+---
+
+<!doctype html>
+<html lang="en-GB">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <meta name="theme-color" content="#07110f" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="canonical" href="https://mindlynx.ai/" />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content="https://mindlynx.ai/" />
+    <meta property="og:image" content="https://mindlynx.ai/images/og.jpg" />
+    <meta name="twitter:card" content="summary_large_image" />
+  </head>
+
+  <body>
+    <header class="site-header">
+      <a class="brand" href="#top" aria-label="MindLynx — home">
+        <svg class="brand-mark" viewBox="0 0 32 32" aria-hidden="true">
+          <path d="M6 14 9 5l4.5 5h5L23 5l3 9" />
+          <path d="M6 14v5l6 8 4 1.5 4-1.5 6-8v-5" />
+          <path d="M11 17l3-.9M21 17l-3-.9" />
+          <path d="M16 22.5v2" />
+        </svg>
+        MindLynx
+      </a>
+
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">
+        <span></span><span></span>
+        <span class="sr-only">Menu</span>
+      </button>
+
+      <nav class="site-nav" id="site-nav" aria-label="Site">
+        <a href="#why">Why we build</a>
+        <a href="#beliefs">What we believe</a>
+        <a href="#companies">Companies</a>
+        <a class="nav-cta" href="#talk">Talk to us</a>
+      </nav>
+    </header>
+
+    <main id="top">
+      <!-- Hero -->
+      <section class="hero">
+        <div class="hero-media" role="img" aria-label="Two kayakers paddling through a sunlit forest gorge on still water"></div>
+        <div class="hero-shade" aria-hidden="true"></div>
+        <div class="shell hero-content">
+          <p class="eyebrow">MindLynx · Building in Britain · Building in the open</p>
+          <h1>Reclaim your&nbsp;time.</h1>
+          <p class="hero-copy">
+            We build intelligence that gives people more ownership of their time, their knowledge
+            and what comes next.
+          </p>
+          <div class="hero-actions">
+            <a class="button button-primary" href="#why">Why we build <span aria-hidden="true">→</span></a>
+            <a class="button button-quiet" href="#companies">Meet the companies</a>
+          </div>
+        </div>
+        <a class="scroll-cue" href="#why">Discover <span class="scroll-line" aria-hidden="true"></span></a>
+      </section>
+
+      <!-- Statement -->
+      <section class="section-light statement" id="why">
+        <div class="shell statement-grid reveal">
+          <p class="section-label">Why we build</p>
+          <div>
+            <h2>Technology should make life larger.</h2>
+            <p class="lead">
+              AI will change how people work. That should mean more opportunity, more ownership and
+              more room for distinctly human judgement — not simply fewer people.
+            </p>
+            <p>
+              MindLynx is a small studio in Britain. We start companies that put that principle to
+              work — and we build them in the open.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Beliefs -->
+      <section class="beliefs" id="beliefs">
+        <div class="shell">
+          <div class="section-heading reveal">
+            <p class="section-label">What we believe</p>
+            <h2>The principles we build by.</h2>
+          </div>
+          <div class="belief-list">
+            <article class="belief reveal">
+              <p class="belief-number">01</p>
+              <div>
+                <h3>Time belongs to people</h3>
+                <p>Technology should remove repetition without removing purpose.</p>
+              </div>
+            </article>
+            <article class="belief reveal">
+              <p class="belief-number">02</p>
+              <div>
+                <h3>Knowledge has value</h3>
+                <p>
+                  The people who understand the work should help shape the intelligence — and share
+                  in what it creates.
+                </p>
+              </div>
+            </article>
+            <article class="belief reveal">
+              <p class="belief-number">03</p>
+              <div>
+                <h3>The future should be broadly owned</h3>
+                <p>
+                  The advantages of AI should be available to one person starting out as readily as
+                  to the world's largest organisations.
+                </p>
+              </div>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <!-- Interlude -->
+      <section class="interlude">
+        <div class="interlude-image" role="img" aria-label="A person writing in a notebook beside a calm sea at dusk"></div>
+        <div class="interlude-shade" aria-hidden="true"></div>
+        <div class="shell interlude-strap reveal">
+          <p class="section-label">MindLynx</p>
+          <p>Intelligence that gives something back.</p>
+        </div>
+      </section>
+
+      <!-- Companies -->
+      <section class="section-light companies" id="companies">
+        <div class="shell">
+          <div class="section-heading reveal">
+            <p class="section-label">The companies we are building</p>
+            <h2>Meet the companies.</h2>
+          </div>
+          <div class="company-list">
+            <article class="company reveal">
+              <h3>Helix</h3>
+              <p>Intelligent work, governed from the first action.</p>
+              <a class="company-link" href="https://helix.work" rel="noopener">helix.work <span aria-hidden="true">→</span></a>
+            </article>
+            <article class="company reveal">
+              <h3>Albion</h3>
+              <p>Sovereign intelligence, taught by the people who know.</p>
+              <a class="company-link" href="#talk" data-interest="albion">Join the waitlist <span aria-hidden="true">→</span></a>
+            </article>
+            <article class="company reveal">
+              <h3>Cortex</h3>
+              <p>Memory that remains yours.</p>
+              <span class="company-soon">Announcement to follow</span>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <!-- Building in the open -->
+      <section class="open-build">
+        <div class="shell open-build-grid reveal">
+          <p class="section-label">Building in the open</p>
+          <div>
+            <p class="lead">
+              We are building this now. We release it piece by piece, publish what we prove and say
+              clearly what remains unfinished.
+            </p>
+            <p>If you want to watch it happen — or tell us where we're wrong — we'd like that.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Contact -->
+      <section class="contact" id="talk">
+        <div class="shell contact-grid">
+          <div class="reveal">
+            <p class="section-label">Talk to us</p>
+            <a class="contact-mail" href="mailto:hello@mindlynx.ai">hello@mindlynx.ai</a>
+          </div>
+          <div class="reveal">
+            <h2>The future should belong to more people.</h2>
+            <p class="contact-lead">
+              Whether you want to work with Helix, join the Albion waitlist or simply tell us what
+              you think — write to us. A person reads every message.
+            </p>
+
+            <form class="contact-form" id="contact-form" novalidate>
+              <div class="field">
+                <label for="name">Name</label>
+                <input id="name" name="name" type="text" autocomplete="name" required maxlength="200" />
+              </div>
+              <div class="field">
+                <label for="email">Email</label>
+                <input id="email" name="email" type="email" autocomplete="email" required maxlength="254" />
+              </div>
+              <div class="field field-select">
+                <label for="interest">I'm writing about</label>
+                <select id="interest" name="interest">
+                  <option value="general">A general enquiry</option>
+                  <option value="albion">The Albion waitlist</option>
+                </select>
+              </div>
+              <div class="field">
+                <label for="message">Message</label>
+                <textarea id="message" name="message" maxlength="5000" placeholder="Optional — but we do read everything."></textarea>
+              </div>
+              <div class="hp" aria-hidden="true">
+                <label for="company">Company</label>
+                <input id="company" name="company" type="text" tabindex="-1" autocomplete="off" />
+              </div>
+              <div class="form-footer">
+                <button class="button button-primary" type="submit">Send message</button>
+                <p class="form-status" role="status"></p>
+              </div>
+            </form>
+
+            <div class="form-success" hidden>
+              <p>Thank you — we'll be in touch.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <div class="shell">
+        <span>MindLynx Ltd · London</span>
+        <span>Building in Britain · Building in the open</span>
+      </div>
+    </footer>
+
+    <script>
+      const header = document.querySelector('.site-header')!;
+      const setScrolled = () => header.classList.toggle('is-scrolled', window.scrollY > 24);
+      addEventListener('scroll', setScrolled, { passive: true });
+      setScrolled();
+
+      const toggle = document.querySelector<HTMLButtonElement>('.menu-toggle')!;
+      toggle.addEventListener('click', () => {
+        const open = document.body.classList.toggle('menu-open');
+        toggle.setAttribute('aria-expanded', String(open));
+      });
+      document.querySelectorAll('.site-nav a').forEach((a) =>
+        a.addEventListener('click', () => {
+          document.body.classList.remove('menu-open');
+          toggle.setAttribute('aria-expanded', 'false');
+        })
+      );
+
+      const io = new IntersectionObserver(
+        (entries) => {
+          for (const e of entries) {
+            if (e.isIntersecting) {
+              e.target.classList.add('is-visible');
+              io.unobserve(e.target);
+            }
+          }
+        },
+        { threshold: 0.12, rootMargin: '0px 0px -40px' }
+      );
+      document.querySelectorAll('.reveal').forEach((el) => io.observe(el));
+
+      const interestSelect = document.querySelector<HTMLSelectElement>('#interest')!;
+      document.querySelectorAll<HTMLAnchorElement>('[data-interest]').forEach((a) =>
+        a.addEventListener('click', () => (interestSelect.value = a.dataset.interest!))
+      );
+
+      const form = document.querySelector<HTMLFormElement>('#contact-form')!;
+      const status = form.querySelector<HTMLElement>('.form-status')!;
+      const success = document.querySelector<HTMLElement>('.form-success')!;
+      form.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        status.classList.remove('is-error');
+        if (!form.reportValidity()) return;
+        const button = form.querySelector<HTMLButtonElement>('button[type=submit]')!;
+        button.disabled = true;
+        status.textContent = 'Sending…';
+        try {
+          const res = await fetch('/api/contact', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(Object.fromEntries(new FormData(form))),
+          });
+          if (!res.ok) throw new Error(String(res.status));
+          form.hidden = true;
+          success.hidden = false;
+        } catch {
+          status.textContent = 'Something went wrong — please email hello@mindlynx.ai instead.';
+          status.classList.add('is-error');
+          button.disabled = false;
+        }
+      });
+    </script>
+  </body>
+</html>
