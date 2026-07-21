@@ -30,6 +30,7 @@ deploy elsewhere.
 
 ## Images
 
-`public/images/hero.jpg` and `interlude.jpg` are interim assets recovered from the
-design file (bottom regions reconstructed). Regenerate at full quality with
-Higgsfield (image-to-image from these references) and replace in place.
+`public/images/hero.jpg` is exported from the original source in
+`design/hero-kayak-final.png`. `interlude.jpg` is still an interim asset recovered
+from the design file (bottom region reconstructed) — replace with the original
+seaside image, or regenerate hi-res with Higgsfield, when available.
