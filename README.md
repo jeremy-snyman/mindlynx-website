@@ -24,9 +24,10 @@ fallback message pointing at hello@mindlynx.ai.
 
 ## Deploy
 
-Built for Vercel (`@astrojs/vercel` adapter): import the repo in Vercel, set the
-env vars from `.env.example`, done. Swap the adapter in `astro.config.mjs` to
-deploy elsewhere.
+Uses the Node adapter (`@astrojs/node`, standalone), so it runs anywhere Node
+runs. On Render: build command `npm install && npm run build`, start command
+`npm start`, and set the env vars from `.env.example` in the dashboard. For
+Vercel instead, swap the adapter back to `@astrojs/vercel`.
 
 ## Images
 

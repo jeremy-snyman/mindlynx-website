@@ -1,8 +1,8 @@
 import { defineConfig } from 'astro/config';
-import vercel from '@astrojs/vercel';
+import node from '@astrojs/node';
 
 export default defineConfig({
   site: 'https://mindlynx.ai',
   output: 'static',
-  adapter: vercel(),
+  adapter: node({ mode: 'standalone' }),
 });
