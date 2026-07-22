@@ -314,37 +314,55 @@ h2 {
   line-height: 1.9;
 }
 .product .company-link { display: inline-block; margin-top: 30px; }
-.horizon { margin-top: 104px; }
-.horizon .section-label { margin-bottom: 40px; }
-
-/* ── Partner band (dark) ────────────────────────────────── */
-.partner { background: var(--ink); color: var(--cream); padding: 150px 0; text-align: center; }
-.partner .shell { display: flex; flex-direction: column; align-items: center; }
-.partner h2 { max-width: 780px; font-size: clamp(2.6rem, 5vw, 5rem); }
-.partner-copy { margin: 30px 0 0; max-width: 600px; font-size: 1.06rem; line-height: 1.75; color: rgba(247, 241, 229, 0.68); }
-.partner .button { margin-top: 40px; }
-
-/* ── Companies rows (reused by "On the horizon") ────────── */
-.companies { padding: 138px 0 128px; }
-.companies .section-heading { margin-bottom: 64px; }
-.company-list { border-top: 1px solid var(--line-dark); }
-.company {
-  display: grid;
-  grid-template-columns: 220px 1fr auto;
-  align-items: baseline;
-  gap: 32px;
-  padding: 40px 0 44px;
-  border-bottom: 1px solid var(--line-dark);
-}
-.company h3 {
+/* ── Coming next (3-up) ─────────────────────────────────── */
+.coming { margin-top: 104px; }
+.coming .section-label { margin-bottom: 40px; }
+.coming-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 48px; }
+.coming-item { border-top: 1px solid var(--line-dark); padding-top: 32px; }
+.coming-item h3 {
   margin: 0;
   font-family: var(--serif);
-  font-size: clamp(1.9rem, 3vw, 2.6rem);
-  line-height: 1;
+  font-size: clamp(1.6rem, 2.2vw, 2.1rem);
+  line-height: 1.15;
   font-weight: 400;
-  letter-spacing: -0.03em;
+  letter-spacing: -0.02em;
 }
-.company p { margin: 0; max-width: 560px; font-size: 1.06rem; line-height: 1.6; color: rgba(21, 32, 25, 0.72); }
+.coming-item p { margin: 14px 0 0; font-size: 1.02rem; line-height: 1.68; color: rgba(21, 32, 25, 0.72); }
+
+/* ── Partner card ───────────────────────────────────────── */
+.partner-card {
+  margin-top: 100px;
+  border: 1px solid var(--line-dark);
+  background: #ece7dd;
+  padding: clamp(44px, 6vw, 84px);
+  display: grid;
+  grid-template-columns: 1fr 1.4fr;
+  gap: 64px;
+  align-items: start;
+}
+.partner-card .section-label { margin-bottom: 22px; color: rgba(21, 32, 25, 0.55); }
+.partner-heading {
+  margin: 0;
+  font-family: var(--serif);
+  font-size: clamp(2.3rem, 4vw, 3.9rem);
+  line-height: 1.02;
+  font-weight: 400;
+  letter-spacing: -0.035em;
+  text-wrap: balance;
+}
+.partner-copy { margin: 0; font-size: 1.1rem; line-height: 1.75; color: rgba(21, 32, 25, 0.8); }
+.partner-link {
+  display: inline-block;
+  margin-top: 30px;
+  font-size: 1.02rem;
+  font-weight: 550;
+  text-decoration: none;
+  padding-bottom: 8px;
+  border-bottom: 1.5px solid rgba(21, 32, 25, 0.75);
+  transition: opacity 180ms ease;
+}
+.partner-link:hover { opacity: 0.65; }
+
 .company-link {
   font-size: 0.93rem;
   font-weight: 550;
@@ -355,7 +373,6 @@ h2 {
   transition: opacity 180ms ease;
 }
 .company-link:hover { opacity: 0.7; }
-.company-soon { font-size: 0.93rem; white-space: nowrap; color: rgba(21, 32, 25, 0.5); }
 
 /* ── Open build (light, deeper paper) ───────────────────── */
 .open-build { background: var(--paper-deep); color: var(--text); padding: 128px 0; }
@@ -482,12 +499,11 @@ h2 {
   .statement { padding: 104px 0; }
   .beliefs { padding: 104px 0 88px; }
   .belief { grid-template-columns: 1fr; gap: 8px; padding: 38px 0 42px; }
-  .companies { padding: 100px 0 92px; }
-  .company { grid-template-columns: 1fr; gap: 12px; }
   .what { padding: 100px 0 84px; }
   .product { grid-template-columns: 1fr; gap: 10px; padding: 48px 0 54px; }
-  .horizon { margin-top: 72px; }
-  .partner { padding: 104px 0; }
+  .coming { margin-top: 72px; }
+  .coming-grid { grid-template-columns: 1fr; gap: 34px; }
+  .partner-card { grid-template-columns: 1fr; gap: 28px; margin-top: 72px; }
   .open-build { padding: 96px 0; }
   .contact { padding: 110px 0 96px; }
   .hero-actions { flex-wrap: wrap; }
