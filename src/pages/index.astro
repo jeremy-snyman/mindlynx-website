@@ -42,7 +42,7 @@ const description =
       <nav class="site-nav" id="site-nav" aria-label="Site">
         <a href="#why">Why we build</a>
         <a href="#beliefs">What we believe</a>
-        <a href="#companies">Companies</a>
+        <a href="#what">What we do</a>
         <a class="nav-cta" href="#talk">Talk to us</a>
       </nav>
     </header>
@@ -56,12 +56,11 @@ const description =
           <p class="eyebrow">MindLynx · Building in Britain · Building in the open</p>
           <h1>Reclaim your&nbsp;time.</h1>
           <p class="hero-copy">
-            We build intelligence that gives people more ownership of their time, their knowledge
-            and what comes next.
+            We build intelligence that gives people back their time, their space and their money.
           </p>
           <div class="hero-actions">
             <a class="button button-primary" href="#why">Why we build <span aria-hidden="true">→</span></a>
-            <a class="button button-quiet" href="#companies">Meet the companies</a>
+            <a class="button button-quiet" href="#what">See what we build</a>
           </div>
         </div>
         <a class="scroll-cue" href="#why">Discover <span class="scroll-line" aria-hidden="true"></span></a>
@@ -134,30 +133,79 @@ const description =
         </div>
       </section>
 
-      <!-- Companies -->
-      <section class="section-light companies" id="companies">
+      <!-- What we do -->
+      <section class="section-light what" id="what">
         <div class="shell">
           <div class="section-heading reveal">
-            <p class="section-label">The companies we are building</p>
-            <h2>Meet the companies.</h2>
+            <p class="section-label">What we do</p>
+            <h2>How we give it back.</h2>
           </div>
-          <div class="company-list">
-            <article class="company reveal">
-              <h3>Helix</h3>
-              <p>Intelligent work, governed from the first action.</p>
-              <a class="company-link" href="https://helix.work" rel="noopener">helix.work <span aria-hidden="true">→</span></a>
+          <p class="what-lead reveal">Time, space and money, returned. These are the products doing it.</p>
+
+          <div class="product-list">
+            <article class="product reveal">
+              <p class="product-number">01 · Platform</p>
+              <div>
+                <h3>Helix</h3>
+                <p class="product-promise">An operating system for work that simply gets done.</p>
+                <p class="product-copy">
+                  Built for AI agents and humans working side by side. Work moves safely and
+                  autonomously — governed from the first action — so people spend their judgement
+                  where it matters.
+                </p>
+                <p class="product-tags">For agents and humans · Safe autonomy · Governed by default</p>
+                <a class="company-link" href="https://helix.work" rel="noopener">helix.work <span aria-hidden="true">→</span></a>
+              </div>
             </article>
-            <article class="company reveal">
-              <h3>Albion</h3>
-              <p>Sovereign intelligence, taught by the people who know.</p>
-              <a class="company-link" href="#talk" data-interest="albion">Join the waitlist <span aria-hidden="true">→</span></a>
-            </article>
-            <article class="company reveal">
-              <h3>Cortex</h3>
-              <p>Memory that remains yours.</p>
-              <span class="company-soon">Announcement to follow</span>
+
+            <article class="product reveal">
+              <p class="product-number">02 · Models — open source</p>
+              <div>
+                <h3>Albion</h3>
+                <p class="product-promise">Intelligence that answers to no one else.</p>
+                <p class="product-copy">
+                  A family of open-source models that keep reasoning sovereign — independent of the
+                  frontier labs, at a fraction of the cost. Taught by the people who know the work.
+                </p>
+                <p class="product-tags">Open source · Sovereign by design · Radically lower cost</p>
+                <a class="company-link" href="#talk" data-interest="albion">Join the waitlist <span aria-hidden="true">→</span></a>
+              </div>
             </article>
           </div>
+
+          <div class="horizon reveal">
+            <p class="section-label">On the horizon</p>
+            <div class="company-list">
+              <article class="company">
+                <h3>MindLynx Open Source</h3>
+                <p>Our tools and research, released in the open.</p>
+                <span class="company-soon">In the works</span>
+              </article>
+              <article class="company">
+                <h3>Founders Accelerator</h3>
+                <p>Start, test and launch a product at a fraction of the cost.</p>
+                <span class="company-soon">Coming soon</span>
+              </article>
+              <article class="company">
+                <h3>Cortex</h3>
+                <p>Memory that remains yours.</p>
+                <span class="company-soon">Announcement to follow</span>
+              </article>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Partner band -->
+      <section class="partner">
+        <div class="shell reveal">
+          <p class="section-label">Build with us</p>
+          <h2>Some of our clients become founders.</h2>
+          <p class="partner-copy">
+            If there's a product in you and you want to take it to market, we'll partner:
+            build it together, launch it together, share in the business.
+          </p>
+          <a class="button button-primary" href="#talk" data-interest="partner">Talk to us about your idea</a>
         </div>
       </section>
 
@@ -185,8 +233,8 @@ const description =
           <div class="reveal">
             <h2>The future should belong to more people.</h2>
             <p class="contact-lead">
-              Whether you want to work with Helix, join the Albion waitlist or simply tell us what
-              you think — write to us. A person reads every message.
+              Whether you want to work with Helix, join the Albion waitlist, partner on a product
+              or simply tell us what you think — write to us. A person reads every message.
             </p>
 
             <form class="contact-form" id="contact-form" novalidate>
@@ -203,6 +251,7 @@ const description =
                 <select id="interest" name="interest">
                   <option value="general">A general enquiry</option>
                   <option value="albion">The Albion waitlist</option>
+                  <option value="partner">Partnering on a product</option>
                 </select>
               </div>
               <div class="field">

@@ -23,7 +23,9 @@ export const POST: APIRoute = async ({ request }) => {
   const name = String(data.name ?? '').trim().slice(0, 200);
   const email = String(data.email ?? '').trim().slice(0, 254);
   const message = String(data.message ?? '').trim().slice(0, 5000);
-  const interest = data.interest === 'albion' ? 'albion' : 'general';
+  const interest = ['albion', 'partner'].includes(String(data.interest))
+    ? String(data.interest)
+    : 'general';
 
   // Honeypot: bots fill the hidden "company" field — pretend success.
   if (String(data.company ?? '').trim() !== '') return json(200, { ok: true });
@@ -39,10 +41,11 @@ export const POST: APIRoute = async ({ request }) => {
   const to = import.meta.env.CONTACT_TO ?? 'hello@mindlynx.ai';
   const from = import.meta.env.CONTACT_FROM ?? 'MindLynx <onboarding@resend.dev>';
 
-  const subject =
-    interest === 'albion'
-      ? `Albion waitlist — ${name}`
-      : `MindLynx enquiry — ${name}`;
+  const subject = {
+    albion: `Albion waitlist — ${name}`,
+    partner: `Partnership — ${name}`,
+    general: `MindLynx enquiry — ${name}`,
+  }[interest]!;
 
   const { error } = await resend.emails.send({
     from,
@@ -51,7 +54,7 @@ export const POST: APIRoute = async ({ request }) => {
     subject,
     html: `
       <p><strong>${esc(name)}</strong> &lt;${esc(email)}&gt;</p>
-      <p>About: ${interest === 'albion' ? 'Albion waitlist' : 'General enquiry'}</p>
+      <p>About: ${{ albion: 'Albion waitlist', partner: 'Partnering on a product', general: 'General enquiry' }[interest]}</p>
       ${message ? `<p>${esc(message).replace(/\n/g, '<br>')}</p>` : '<p><em>No message.</em></p>'}
     `,
   });
