@@ -75,13 +75,10 @@ button, a { -webkit-tap-highlight-color: transparent; }
   letter-spacing: -0.03em;
 }
 .brand-mark {
+  display: block;
   width: 31px;
   height: 31px;
-  fill: none;
-  stroke: currentColor;
-  stroke-width: 1.65;
-  stroke-linecap: round;
-  stroke-linejoin: round;
+  object-fit: contain;
 }
 .site-nav { display: flex; align-items: center; gap: 36px; font-size: 0.93rem; }
 .site-nav a { text-decoration: none; opacity: 0.86; transition: opacity 180ms ease; }
