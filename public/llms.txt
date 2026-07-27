@@ -1,0 +1,28 @@
+# MindLynx
+
+> MindLynx is a British AI studio (MindLynx Ltd, London, company number 17226845) that builds intelligence to give people back their time, their space and their money. It builds its products in the open.
+
+## Products
+
+- [Helix](https://helix.work): an operating system for work, built for AI agents and humans working side by side. Work moves safely and autonomously, governed from the first action.
+- [Albion](https://albion.helix.work): a family of open-source models that keep reasoning sovereign, independent of the frontier labs, at a fraction of the usual cost.
+
+## Coming next
+
+- MindLynx Open Source: production tools (agents, scaffolding, evaluations) released for everyone to build on.
+- Cortex: memory that remains yours. Announcement to follow.
+- Founders Accelerator: start, test and take products to market at a fraction of the usual cost, alongside MindLynx teams.
+
+## Partnering
+
+Some MindLynx clients become founders of their own products, with MindLynx as a partner in the business. Ideas worth taking to market are welcome.
+
+## Pages
+
+- [Home](https://mindlynx.ai/): who MindLynx is, what it believes, what it builds
+- [Privacy](https://mindlynx.ai/privacy): data handling, first-party analytics, cookies
+
+## Contact
+
+- Email: hello@mindlynx.ai
+- Contact form: https://mindlynx.ai/#talk (general enquiries, the Albion waitlist, product partnerships)

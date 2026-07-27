@@ -16,8 +16,10 @@
   --line-dark: rgba(20, 33, 26, 0.18);
   --line-light: rgba(247, 241, 229, 0.17);
   --shell: min(1180px, calc(100vw - 48px));
-  --serif: "Iowan Old Style", "Palatino Linotype", Palatino, Baskerville, Georgia, serif;
-  --sans: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+  /* Self-hosted variable fonts (fontsource); system stacks remain as fallback
+     so the page is never blocked on font delivery. */
+  --serif: "Source Serif 4 Variable", "Iowan Old Style", "Palatino Linotype", Palatino, Baskerville, Georgia, serif;
+  --sans: "Inter Variable", Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
 }
 
 * { box-sizing: border-box; }
@@ -123,6 +125,15 @@ button, a { -webkit-tap-highlight-color: transparent; }
   background-position: center, center;
   transform: scale(1.035);
   animation: settle 1.8s cubic-bezier(.2, .8, .2, 1) both;
+}
+/* WebP where supported (41% smaller); the jpg declaration above remains the
+   fallback for engines without image-set. */
+@supports (background-image: image-set(url("x.webp") type("image/webp"))) {
+  .hero-media {
+    background-image:
+      image-set(url("/images/hero.webp") type("image/webp"), url("/images/hero.jpg") type("image/jpeg")),
+      url("data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDABIMDRANCxIQDhAUExIVGywdGxgYGzYnKSAsQDlEQz85Pj1HUGZXR0thTT0+WXlaYWltcnNyRVV9hnxvhWZwcm7/2wBDARMUFBsXGzQdHTRuST5Jbm5ubm5ubm5ubm5ubm5ubm5ubm5ubm5ubm5ubm5ubm5ubm5ubm5ubm5ubm5ubm5ubm7/wAARCAAQABwDASIAAhEBAxEB/8QAHwAAAQUBAQEBAQEAAAAAAAAAAAECAwQFBgcICQoL/8QAtRAAAgEDAwIEAwUFBAQAAAF9AQIDAAQRBRIhMUEGE1FhByJxFDKBkaEII0KxwRVS0fAkM2JyggkKFhcYGRolJicoKSo0NTY3ODk6Q0RFRkdISUpTVFVWV1hZWmNkZWZnaGlqc3R1dnd4eXqDhIWGh4iJipKTlJWWl5iZmqKjpKWmp6ipqrKztLW2t7i5usLDxMXGx8jJytLT1NXW19jZ2uHi4+Tl5ufo6erx8vP09fb3+Pn6/8QAHwEAAwEBAQEBAQEBAQAAAAAAAAECAwQFBgcICQoL/8QAtREAAgECBAQDBAcFBAQAAQJ3AAECAxEEBSExBhJBUQdhcRMiMoEIFEKRobHBCSMzUvAVYnLRChYkNOEl8RcYGRomJygpKjU2Nzg5OkNERUZHSElKU1RVVldYWVpjZGVmZ2hpanN0dXZ3eHl6goOEhYaHiImKkpOUlZaXmJmaoqOkpaanqKmqsrO0tba3uLm6wsPExcbHyMnK0tPU1dbX2Nna4uPk5ebn6Onq8vP09fb3+Pn6/9oADAMBAAIRAxEAPwDjUOODVi2lMcoPaq69anh5YUrCudFDMlxZlSeVrHlb94dq5FTR/uFLE9e1VZJsuSKmxVz/2Q==");
+  }
 }
 @keyframes settle {
   from { transform: scale(1.09); }
@@ -276,6 +287,11 @@ h2 {
   background-image: url("/images/interlude.jpg");
   background-size: cover;
   background-position: center 30%;
+}
+@supports (background-image: image-set(url("x.webp") type("image/webp"))) {
+  .interlude-image {
+    background-image: image-set(url("/images/interlude.webp") type("image/webp"), url("/images/interlude.jpg") type("image/jpeg"));
+  }
 }
 .interlude-shade {
   position: absolute;
@@ -683,7 +699,8 @@ h2 {
   .open-build { padding: 96px 0; }
   .contact { padding: 110px 0 96px; }
   .hero-actions { flex-direction: column; align-items: stretch; max-width: 340px; }
-  .scroll-cue { display: none; }
+  /* Centred on phones: the only signal that content exists below a 100svh hero. */
+  .scroll-cue { right: 50%; transform: translateX(50%); bottom: 16px; }
   /* Inline CTAs keep their visual size but gain a 44px thumb target. */
   .company-link, .partner-link, .contact-mail, .site-footer a {
     padding-block: 14px;
@@ -694,6 +711,15 @@ h2 {
   .interlude-image { background-position: 78% 30%; }
   /* Keep the kayak (centred ~70% across the image) in the narrow mobile crop. */
   .hero-media { background-position: 70% center; }
+  /* Phone-sized image variants: 80KB total instead of 240KB. */
+  @supports (background-image: image-set(url("x.webp") type("image/webp"))) {
+    .hero-media {
+      background-image: image-set(url("/images/hero-mobile.webp") type("image/webp"), url("/images/hero.jpg") type("image/jpeg"));
+    }
+    .interlude-image {
+      background-image: image-set(url("/images/interlude-mobile.webp") type("image/webp"), url("/images/interlude.jpg") type("image/jpeg"));
+    }
+  }
 }
 
 @media (max-width: 760px) {

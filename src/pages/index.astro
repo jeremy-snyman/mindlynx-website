@@ -1,4 +1,6 @@
 ---
+import '@fontsource-variable/source-serif-4';
+import '@fontsource-variable/inter';
 import '../styles/global.css';
 import CookieNotice from '../components/CookieNotice.astro';
 
@@ -18,11 +20,55 @@ const description =
     <link rel="icon" type="image/png" href="/favicon.png" />
     <link rel="canonical" href="https://mindlynx.ai/" />
     <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="MindLynx" />
+    <meta property="og:locale" content="en_GB" />
     <meta property="og:title" content={title} />
     <meta property="og:description" content={description} />
     <meta property="og:url" content="https://mindlynx.ai/" />
     <meta property="og:image" content="https://mindlynx.ai/images/og.jpg" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="Two kayakers paddling through a sunlit forest gorge" />
     <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content="https://mindlynx.ai/images/og.jpg" />
+    <script
+      type="application/ld+json"
+      is:inline
+      set:html={JSON.stringify({
+        '@context': 'https://schema.org',
+        '@graph': [
+          {
+            '@type': 'Organization',
+            '@id': 'https://mindlynx.ai/#organization',
+            name: 'MindLynx',
+            legalName: 'MindLynx Ltd',
+            url: 'https://mindlynx.ai/',
+            logo: 'https://mindlynx.ai/favicon.png',
+            email: 'hello@mindlynx.ai',
+            slogan: 'Intelligence that gives something back',
+            description:
+              'British AI studio building Helix, an operating system for work where AI agents and humans work side by side, and Albion, a family of open-source sovereign models.',
+            identifier: {
+              '@type': 'PropertyValue',
+              propertyID: 'Companies House registration number',
+              value: '17226845',
+            },
+            address: { '@type': 'PostalAddress', addressLocality: 'London', addressCountry: 'GB' },
+            sameAs: ['https://helix.work', 'https://albion.helix.work', 'https://github.com/mindlynx-ai'],
+          },
+          {
+            '@type': 'WebSite',
+            '@id': 'https://mindlynx.ai/#website',
+            url: 'https://mindlynx.ai/',
+            name: 'MindLynx',
+            publisher: { '@id': 'https://mindlynx.ai/#organization' },
+            inLanguage: 'en-GB',
+          },
+        ],
+      })}
+    />
     <script is:inline>document.documentElement.classList.add('js');</script>
     <script is:inline src="/tachyon-emit.js" defer></script>
   </head>
