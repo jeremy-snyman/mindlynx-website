@@ -567,6 +567,8 @@ h2 {
 }
 
 /* ── Cookie notice ──────────────────────────────────────── */
+/* display:flex would otherwise defeat the hidden attribute's display:none. */
+.cookie-notice[hidden] { display: none; }
 .cookie-notice {
   position: fixed;
   z-index: 40;
