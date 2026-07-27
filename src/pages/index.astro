@@ -301,7 +301,7 @@ const description =
 
     <footer class="site-footer">
       <div class="shell">
-        <span>MindLynx Ltd · London</span>
+        <span>MindLynx Ltd · Company No. 17226845 · London</span>
         <span><a href="/privacy" data-track="footer-privacy">Privacy</a> · Building in Britain · Building in the open</span>
       </div>
     </footer>
@@ -325,6 +325,13 @@ const description =
           toggle.setAttribute('aria-expanded', 'false');
         })
       );
+      addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && document.body.classList.contains('menu-open')) {
+          document.body.classList.remove('menu-open');
+          toggle.setAttribute('aria-expanded', 'false');
+          toggle.focus();
+        }
+      });
 
       const io = new IntersectionObserver(
         (entries) => {

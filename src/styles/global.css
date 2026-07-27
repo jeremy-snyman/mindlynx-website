@@ -71,7 +71,11 @@ button, a { -webkit-tap-highlight-color: transparent; }
   display: flex;
   align-items: center;
   justify-content: space-between;
-  transition: background 240ms ease, height 240ms ease, backdrop-filter 240ms ease;
+  /* Height is deliberately NOT in the transition list: animating height forces
+     continuous relayout. The 18px shrink snaps instead, which is imperceptible
+     mid-scroll; the background and blur still fade smoothly. */
+  transition: background 240ms ease, backdrop-filter 240ms ease, border-color 240ms ease;
+  border-bottom: 1px solid transparent;
 }
 .site-header.is-scrolled {
   height: 70px;
@@ -663,6 +667,8 @@ h2 {
   .hero-actions { flex-wrap: wrap; }
   .scroll-cue { display: none; }
   .interlude-image { background-position: 78% 30%; }
+  /* Keep the kayak (centred ~70% across the image) in the narrow mobile crop. */
+  .hero-media { background-position: 70% center; }
 }
 
 @media (max-width: 760px) {
