@@ -1,6 +1,6 @@
 # MindLynx
 
-> MindLynx is a British AI studio (MindLynx Ltd, London, company number 17226845) that builds intelligence to give people back their time, their space and their money. It builds its products in the open.
+> MindLynx is a British AI studio (MindLynx Ltd, London, company number 17226845) that builds intelligence to give people back their time and their space, and to create real value. It builds its products in the open.
 
 ## Products
 
