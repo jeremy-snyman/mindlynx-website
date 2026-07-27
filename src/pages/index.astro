@@ -22,6 +22,7 @@ const description =
     <meta property="og:url" content="https://mindlynx.ai/" />
     <meta property="og:image" content="https://mindlynx.ai/images/og.jpg" />
     <meta name="twitter:card" content="summary_large_image" />
+    <script is:inline>document.documentElement.classList.add('js');</script>
   </head>
 
   <body>
@@ -141,7 +142,7 @@ const description =
 
           <div class="product-list">
             <article class="product reveal">
-              <p class="product-number">01 · Platform</p>
+              <p class="product-number"><span>01</span>Platform</p>
               <div>
                 <h3>Helix</h3>
                 <p class="product-promise">An operating system for work that simply gets done.</p>
@@ -156,7 +157,7 @@ const description =
             </article>
 
             <article class="product reveal">
-              <p class="product-number">02 · Models — open source</p>
+              <p class="product-number"><span>02</span>Models · open source</p>
               <div>
                 <h3>Albion</h3>
                 <p class="product-promise">Intelligence that answers to no one else.</p>
@@ -244,11 +245,11 @@ const description =
 
             <form class="contact-form" id="contact-form" novalidate>
               <div class="field">
-                <label for="name">Name</label>
+                <label for="name">Name <span class="field-hint">(required)</span></label>
                 <input id="name" name="name" type="text" autocomplete="name" required maxlength="200" />
               </div>
               <div class="field">
-                <label for="email">Email</label>
+                <label for="email">Email <span class="field-hint">(required)</span></label>
                 <input id="email" name="email" type="email" autocomplete="email" required maxlength="254" />
               </div>
               <div class="field field-select">
@@ -260,8 +261,8 @@ const description =
                 </select>
               </div>
               <div class="field">
-                <label for="message">Message</label>
-                <textarea id="message" name="message" maxlength="5000" placeholder="Optional — but we do read everything."></textarea>
+                <label for="message">Message <span class="field-hint">(optional)</span></label>
+                <textarea id="message" name="message" maxlength="5000" placeholder="We do read everything."></textarea>
               </div>
               <div class="hp" aria-hidden="true">
                 <label for="company">Company</label>
@@ -271,6 +272,11 @@ const description =
                 <button class="button button-primary" type="submit">Send message</button>
                 <p class="form-status" role="status"></p>
               </div>
+              <p class="form-note">
+                We use your details to reply, and — if you join the Albion waitlist — to send you
+                Albion news, which you can leave at any time. Nothing else, no sharing.
+                <a href="/privacy">Privacy</a>.
+              </p>
             </form>
 
             <div class="form-success" hidden>
@@ -284,7 +290,7 @@ const description =
     <footer class="site-footer">
       <div class="shell">
         <span>MindLynx Ltd · London</span>
-        <span>Building in Britain · Building in the open</span>
+        <span><a href="/privacy">Privacy</a> · Building in Britain · Building in the open</span>
       </div>
     </footer>
 

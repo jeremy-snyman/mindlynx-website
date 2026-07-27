@@ -10,6 +10,9 @@
   --text: #152019;
   --cream: #f7f1e5;
   --warm: #d6ad68;
+  /* Gold reads 1.8:1 on paper — unusable. Bronze is the light-surface accent:
+     5.4:1 on paper, 4.6:1 on paper-deep. Gold stays for dark surfaces (9.1:1). */
+  --bronze: #7d5a1c;
   --line-dark: rgba(20, 33, 26, 0.18);
   --line-light: rgba(247, 241, 229, 0.17);
   --shell: min(1180px, calc(100vw - 48px));
@@ -27,6 +30,17 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 body.menu-open { overflow: hidden; }
+/* Film grain: sits above imagery, below the z-indexed text layers and header.
+   Gives the flat cream/ink bands a printed-paper materiality. */
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  opacity: 0.035;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)'/%3E%3C/svg%3E");
+}
 a { color: inherit; }
 img { max-width: 100%; }
 button, a { -webkit-tap-highlight-color: transparent; }
@@ -131,6 +145,20 @@ button, a { -webkit-tap-highlight-color: transparent; }
   letter-spacing: 0.17em;
   text-transform: uppercase;
 }
+/* Leading rule: inline-block so wrapping labels still flow normally. */
+.section-label::before {
+  content: "";
+  display: inline-block;
+  width: 26px;
+  height: 1px;
+  margin-right: 14px;
+  vertical-align: 0.3em;
+  background: currentColor;
+  opacity: 0.55;
+}
+.section-light .section-label,
+.open-build .section-label,
+.partner-card .section-label { color: var(--bronze); }
 .hero h1 {
   margin: 0;
   max-width: 720px;
@@ -256,7 +284,9 @@ h2 {
   padding: 0 0 74px;
 }
 .interlude-strap .section-label { margin-bottom: 18px; }
-.interlude-strap p {
+/* :not(.section-label) — otherwise this out-specifies .section-label and the
+   label renders as a 49px serif headline instead of a 12px caps label. */
+.interlude-strap p:not(.section-label) {
   margin: 0;
   max-width: 640px;
   font-family: var(--serif);
@@ -284,7 +314,23 @@ h2 {
   padding: 66px 0 74px;
   border-bottom: 1px solid var(--line-dark);
 }
-.product-number { margin: 6px 0 0; color: var(--warm); font-size: 0.78rem; letter-spacing: 0.14em; text-transform: uppercase; }
+.product-number {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 4px 0 0;
+  color: var(--bronze);
+  font-size: 0.78rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+.product-number span {
+  font-family: var(--serif);
+  font-size: clamp(2.1rem, 3vw, 2.9rem);
+  line-height: 0.9;
+  letter-spacing: -0.04em;
+  text-transform: none;
+}
 .product h3 {
   margin: 0;
   font-family: var(--serif);
@@ -304,7 +350,7 @@ h2 {
 .product-copy { max-width: 660px; margin: 18px 0 0; font-size: 1.06rem; line-height: 1.75; color: rgba(21, 32, 25, 0.72); }
 .product-tags {
   margin: 28px 0 0;
-  color: var(--warm);
+  color: var(--bronze);
   font-size: 0.74rem;
   letter-spacing: 0.15em;
   text-transform: uppercase;
@@ -337,7 +383,7 @@ h2 {
   gap: 64px;
   align-items: start;
 }
-.partner-card .section-label { margin-bottom: 22px; color: rgba(21, 32, 25, 0.55); }
+.partner-card .section-label { margin-bottom: 22px; }
 .partner-heading {
   margin: 0;
   font-family: var(--serif);
@@ -361,15 +407,32 @@ h2 {
 .partner-link:hover { opacity: 0.65; }
 
 .company-link {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
   font-size: 0.93rem;
   font-weight: 550;
   text-decoration: none;
   white-space: nowrap;
   padding-bottom: 6px;
-  border-bottom: 1px solid var(--warm);
-  transition: opacity 180ms ease;
+  border-bottom: 1px solid rgba(125, 90, 28, 0.35);
 }
-.company-link:hover { opacity: 0.7; }
+.company-link::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -1px;
+  height: 1px;
+  background: var(--bronze);
+  transform: scaleX(0);
+  transform-origin: right;
+  transition: transform 320ms cubic-bezier(.2, .8, .2, 1);
+}
+.company-link:hover::after { transform: scaleX(1); transform-origin: left; }
+.company-link span, .partner-link span { transition: transform 260ms cubic-bezier(.2, .8, .2, 1); }
+.company-link:hover span, .partner-link:hover span { transform: translateX(4px); }
 
 /* ── Open build (light, deeper paper) ───────────────────── */
 .open-build { background: var(--paper-deep); color: var(--text); padding: 128px 0; }
@@ -415,7 +478,8 @@ h2 {
   width: 100%;
   padding: 10px 0 14px;
   border: 0;
-  border-bottom: 1px solid var(--line-light);
+  /* 3.8:1 against ink — WCAG 1.4.11 needs 3:1 for control boundaries. */
+  border-bottom: 1px solid rgba(247, 241, 229, 0.42);
   border-radius: 0;
   background: transparent;
   color: var(--cream);
@@ -439,17 +503,30 @@ h2 {
   pointer-events: none;
 }
 .field textarea { min-height: 120px; resize: vertical; }
+/* Suppress the outline for pointer focus only — keyboard focus keeps the
+   global :focus-visible ring, which an unscoped `outline: none` would kill. */
+.field input:focus:not(:focus-visible),
+.field select:focus:not(:focus-visible),
+.field textarea:focus:not(:focus-visible) { outline: none; }
 .field input:focus, .field select:focus, .field textarea:focus {
-  outline: none;
   border-bottom-color: var(--warm);
 }
-.field input::placeholder, .field textarea::placeholder { color: rgba(247, 241, 229, 0.3); }
+.field input::placeholder, .field textarea::placeholder { color: rgba(247, 241, 229, 0.52); }
 .hp { position: absolute; left: -9999px; opacity: 0; pointer-events: none; }
 
 .form-footer { display: flex; align-items: center; gap: 24px; margin-top: 8px; }
 .contact-form .button { border: 0; cursor: pointer; font-family: var(--sans); }
 .contact-form .button[disabled] { opacity: 0.55; transform: none; cursor: wait; }
 .form-status { margin: 0; font-size: 0.95rem; color: rgba(247, 241, 229, 0.68); }
+.form-note {
+  margin: 22px 0 0;
+  max-width: 460px;
+  font-size: 0.85rem;
+  line-height: 1.6;
+  color: rgba(247, 241, 229, 0.62);
+}
+.form-note a { color: inherit; text-underline-offset: 3px; }
+.field-hint { text-transform: none; letter-spacing: 0; opacity: 0.75; }
 .form-status.is-error { color: #e8a08a; }
 .form-success {
   padding: 46px 0;
@@ -462,6 +539,35 @@ h2 {
   font-size: clamp(1.45rem, 2.2vw, 1.9rem);
   line-height: 1.35;
 }
+
+/* ── Legal pages ────────────────────────────────────────── */
+.legal { padding: 170px 0 130px; }
+.legal .shell { max-width: 720px; }
+.legal h1 {
+  margin: 0 0 34px;
+  font-family: var(--serif);
+  font-size: clamp(2.6rem, 5vw, 4.2rem);
+  line-height: 1;
+  font-weight: 400;
+  letter-spacing: -0.045em;
+  text-wrap: balance;
+}
+.legal h2 {
+  margin: 54px 0 14px;
+  font-size: clamp(1.3rem, 2vw, 1.6rem);
+  letter-spacing: -0.02em;
+}
+.legal-lead {
+  margin: 0;
+  font-family: var(--serif);
+  font-size: clamp(1.3rem, 2vw, 1.7rem);
+  line-height: 1.4;
+  color: rgba(247, 241, 229, 0.92);
+}
+.legal p { font-size: 1.04rem; line-height: 1.8; color: rgba(247, 241, 229, 0.72); }
+.legal a { text-underline-offset: 4px; text-decoration-color: var(--warm); }
+.legal-meta { margin-top: 56px; font-size: 0.88rem; opacity: 0.6; }
+.legal .partner-link { border-bottom-color: var(--warm); }
 
 /* ── Footer ─────────────────────────────────────────────── */
 .site-footer { border-top: 1px solid var(--line-light); padding: 30px 0; }
@@ -476,17 +582,19 @@ h2 {
 }
 
 /* ── Reveal-on-scroll ───────────────────────────────────── */
-.reveal {
+/* Gated on .js: without scripting the page must render fully, not blank
+   everything below the hero. The <html class="js"> flag is set inline in head. */
+.js .reveal {
   opacity: 0;
   transform: translateY(26px);
   transition: opacity 800ms cubic-bezier(.2, .8, .2, 1), transform 800ms cubic-bezier(.2, .8, .2, 1);
 }
-.reveal.is-visible { opacity: 1; transform: none; }
+.js .reveal.is-visible { opacity: 1; transform: none; }
 
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
   .hero-media { animation: none; transform: none; }
-  .reveal { opacity: 1; transform: none; transition: none; }
+  .js .reveal { opacity: 1; transform: none; transition: none; }
   .button:hover { transform: none; }
 }
 
