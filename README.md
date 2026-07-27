@@ -22,6 +22,15 @@ npm run dev
 Without `RESEND_API_KEY` the endpoint returns 503 and the form shows its
 fallback message pointing at hello@mindlynx.ai.
 
+## Analytics
+
+First-party Tachyon tracking (ported from the 1Digit site): `public/tachyon-emit.js`,
+self-hosted, no dependencies, localhost-guarded. Events: `PageLoaded` (auto, with UTM
+and referrer attribution), `CtaClicked` (any `[data-track]` element), `LeadCaptured`
+(after form success). `npm run tachyon:check` verifies the ingress accepts events;
+CI runs it 6-hourly (`.github/workflows/tachyon-check.yml`). Note: `CtaClicked` and
+`LeadCaptured` need schemas registered on the Tachyon backend before they land.
+
 ## Deploy
 
 Uses the Node adapter (`@astrojs/node`, standalone), so it runs anywhere Node

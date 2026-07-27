@@ -26,8 +26,11 @@ export const POST: APIRoute = async ({ request }) => {
   const interest = ['albion', 'partner'].includes(String(data.interest))
     ? String(data.interest)
     : 'general';
+  const consented = data.consent === 'yes';
+  const consentedAt = String(data.consentedAt ?? '').slice(0, 40);
+  const pageUrl = String(data.pageUrl ?? '').slice(0, 300);
 
-  // Honeypot: bots fill the hidden "company" field — pretend success.
+  // Honeypot: bots fill the hidden "company" field, so pretend success.
   if (String(data.company ?? '').trim() !== '') return json(200, { ok: true });
 
   if (!name || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
@@ -42,10 +45,18 @@ export const POST: APIRoute = async ({ request }) => {
   const from = import.meta.env.CONTACT_FROM ?? 'MindLynx <onboarding@resend.dev>';
 
   const subject = {
-    albion: `Albion waitlist — ${name}`,
-    partner: `Partnership — ${name}`,
-    general: `MindLynx enquiry — ${name}`,
+    albion: `Albion waitlist · ${name}`,
+    partner: `Partnership · ${name}`,
+    general: `MindLynx enquiry · ${name}`,
   }[interest]!;
+
+  // UK GDPR consent record for the Albion marketing list. Kept in the
+  // notification email so there is a durable, timestamped trail.
+  const consentRecord = consented
+    ? `<p style="color:#666;font-size:12px">Consent record: opted in to Albion news via the
+       checkbox "Email me Albion news and launch updates. I can unsubscribe at any time."
+       at ${esc(consentedAt || new Date().toISOString())} on ${esc(pageUrl || 'mindlynx.ai')}.</p>`
+    : '';
 
   const { error } = await resend.emails.send({
     from,
@@ -56,13 +67,15 @@ export const POST: APIRoute = async ({ request }) => {
       <p><strong>${esc(name)}</strong> &lt;${esc(email)}&gt;</p>
       <p>About: ${{ albion: 'Albion waitlist', partner: 'Partnering on a product', general: 'General enquiry' }[interest]}</p>
       ${message ? `<p>${esc(message).replace(/\n/g, '<br>')}</p>` : '<p><em>No message.</em></p>'}
+      ${consentRecord}
     `,
   });
   if (error) return json(502, { error: 'Could not send message.' });
 
-  // Waitlist signups also land in the Resend audience; failure here is non-fatal.
+  // Waitlist signups join the Resend audience only with explicit consent;
+  // failure here is non-fatal.
   const audienceId = import.meta.env.RESEND_AUDIENCE_ID;
-  if (interest === 'albion' && audienceId) {
+  if (interest === 'albion' && consented && audienceId) {
     await resend.contacts
       .create({ email, firstName: name, unsubscribed: false, audienceId })
       .catch(() => {});

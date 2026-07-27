@@ -1,4 +1,4 @@
-/* MindLynx design system — tokens and component CSS recovered verbatim from
+/* MindLynx design system: tokens and component CSS recovered verbatim from
    the approved claude.ai/design preview; sections past the interlude follow
    the same system. */
 
@@ -10,7 +10,7 @@
   --text: #152019;
   --cream: #f7f1e5;
   --warm: #d6ad68;
-  /* Gold reads 1.8:1 on paper — unusable. Bronze is the light-surface accent:
+  /* Gold reads 1.8:1 on paper (unusable). Bronze is the light-surface accent:
      5.4:1 on paper, 4.6:1 on paper-deep. Gold stays for dark surfaces (9.1:1). */
   --bronze: #7d5a1c;
   --line-dark: rgba(20, 33, 26, 0.18);
@@ -284,7 +284,7 @@ h2 {
   padding: 0 0 74px;
 }
 .interlude-strap .section-label { margin-bottom: 18px; }
-/* :not(.section-label) — otherwise this out-specifies .section-label and the
+/* :not(.section-label): otherwise this out-specifies .section-label and the
    label renders as a 49px serif headline instead of a 12px caps label. */
 .interlude-strap p:not(.section-label) {
   margin: 0;
@@ -356,7 +356,8 @@ h2 {
   text-transform: uppercase;
   line-height: 1.9;
 }
-.product .company-link { display: inline-block; margin-top: 30px; }
+.product .company-link { display: inline-flex; margin-top: 30px; }
+.product-links { display: flex; gap: 34px; flex-wrap: wrap; }
 /* ── Coming next (3-up) ─────────────────────────────────── */
 .coming { margin-top: 104px; }
 .coming .section-label { margin-bottom: 40px; }
@@ -478,7 +479,7 @@ h2 {
   width: 100%;
   padding: 10px 0 14px;
   border: 0;
-  /* 3.8:1 against ink — WCAG 1.4.11 needs 3:1 for control boundaries. */
+  /* 3.8:1 against ink; WCAG 1.4.11 needs 3:1 for control boundaries. */
   border-bottom: 1px solid rgba(247, 241, 229, 0.42);
   border-radius: 0;
   background: transparent;
@@ -503,7 +504,7 @@ h2 {
   pointer-events: none;
 }
 .field textarea { min-height: 120px; resize: vertical; }
-/* Suppress the outline for pointer focus only — keyboard focus keeps the
+/* Suppress the outline for pointer focus only; keyboard focus keeps the
    global :focus-visible ring, which an unscoped `outline: none` would kill. */
 .field input:focus:not(:focus-visible),
 .field select:focus:not(:focus-visible),
@@ -518,6 +519,27 @@ h2 {
 .contact-form .button { border: 0; cursor: pointer; font-family: var(--sans); }
 .contact-form .button[disabled] { opacity: 0.55; transform: none; cursor: wait; }
 .form-status { margin: 0; font-size: 0.95rem; color: rgba(247, 241, 229, 0.68); }
+.consent-field { margin-top: -6px; }
+.consent-label {
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+  cursor: pointer;
+  font-size: 0.95rem;
+  line-height: 1.6;
+  color: rgba(247, 241, 229, 0.78);
+  text-transform: none;
+  letter-spacing: 0;
+}
+.consent-label input {
+  width: 18px;
+  height: 18px;
+  margin-top: 3px;
+  flex-shrink: 0;
+  accent-color: var(--warm);
+  cursor: pointer;
+}
+
 .form-note {
   margin: 22px 0 0;
   max-width: 460px;
@@ -538,6 +560,33 @@ h2 {
   font-family: var(--serif);
   font-size: clamp(1.45rem, 2.2vw, 1.9rem);
   line-height: 1.35;
+}
+
+/* ── Cookie notice ──────────────────────────────────────── */
+.cookie-notice {
+  position: fixed;
+  z-index: 40;
+  left: 24px;
+  right: 24px;
+  bottom: 24px;
+  margin-inline: auto;
+  max-width: 660px;
+  display: flex;
+  align-items: center;
+  gap: 28px;
+  padding: 22px 28px;
+  background: rgba(7, 17, 15, 0.94);
+  backdrop-filter: blur(14px);
+  border: 1px solid rgba(247, 241, 229, 0.16);
+  color: var(--cream);
+}
+.cookie-notice p { margin: 0; font-size: 0.92rem; line-height: 1.55; color: rgba(247, 241, 229, 0.82); }
+.cookie-notice a { color: inherit; text-underline-offset: 3px; text-decoration-color: var(--warm); }
+.cookie-actions { display: flex; gap: 10px; flex-shrink: 0; }
+.cookie-actions .button { min-height: 42px; padding: 0 18px; font-size: 0.88rem; }
+@media (max-width: 640px) {
+  .cookie-notice { flex-direction: column; align-items: stretch; gap: 16px; left: 12px; right: 12px; bottom: 12px; }
+  .cookie-actions .button { flex: 1; }
 }
 
 /* ── Legal pages ────────────────────────────────────────── */

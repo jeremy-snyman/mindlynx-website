@@ -1,7 +1,8 @@
 ---
 import '../styles/global.css';
+import CookieNotice from '../components/CookieNotice.astro';
 
-const title = 'MindLynx — Intelligence that gives something back';
+const title = 'MindLynx · Intelligence that gives something back';
 const description =
   'MindLynx builds intelligence that gives people more ownership of their time, knowledge and future.';
 ---
@@ -23,11 +24,12 @@ const description =
     <meta property="og:image" content="https://mindlynx.ai/images/og.jpg" />
     <meta name="twitter:card" content="summary_large_image" />
     <script is:inline>document.documentElement.classList.add('js');</script>
+    <script is:inline src="/tachyon-emit.js" defer></script>
   </head>
 
   <body>
     <header class="site-header">
-      <a class="brand" href="#top" aria-label="MindLynx — home">
+      <a class="brand" href="#top" aria-label="MindLynx home">
         <img class="brand-mark" src="/images/brand-mark.png" alt="" width="31" height="31" />
         MindLynx
       </a>
@@ -38,10 +40,10 @@ const description =
       </button>
 
       <nav class="site-nav" id="site-nav" aria-label="Site">
-        <a href="#why">Why we build</a>
-        <a href="#beliefs">What we believe</a>
-        <a href="#what">What we do</a>
-        <a class="nav-cta" href="#talk">Talk to us</a>
+        <a href="#why" data-track="nav-why">Why we build</a>
+        <a href="#beliefs" data-track="nav-believe">What we believe</a>
+        <a href="#what" data-track="nav-what">What we do</a>
+        <a class="nav-cta" href="#talk" data-track="nav-talk">Talk to us</a>
       </nav>
     </header>
 
@@ -57,8 +59,8 @@ const description =
             We build intelligence that gives people back their time, their space and their money.
           </p>
           <div class="hero-actions">
-            <a class="button button-primary" href="#why">Why we build <span aria-hidden="true">→</span></a>
-            <a class="button button-quiet" href="#what">See what we build</a>
+            <a class="button button-primary" href="#why" data-track="hero-why">Why we build <span aria-hidden="true">→</span></a>
+            <a class="button button-quiet" href="#what" data-track="hero-what">See what we build</a>
           </div>
         </div>
         <a class="scroll-cue" href="#why">Discover <span class="scroll-line" aria-hidden="true"></span></a>
@@ -72,11 +74,11 @@ const description =
             <h2>Technology should make life larger.</h2>
             <p class="lead">
               AI will change how people work. That should mean more opportunity, more ownership and
-              more room for distinctly human judgement — not simply fewer people.
+              more room for distinctly human judgement, not simply fewer people.
             </p>
             <p>
               MindLynx is a small studio in Britain. We start companies that put that principle to
-              work — and we build them in the open.
+              work, and we build them in the open.
             </p>
           </div>
         </div>
@@ -102,7 +104,7 @@ const description =
               <div>
                 <h3>Knowledge has value</h3>
                 <p>
-                  The people who understand the work should help shape the intelligence — and share
+                  The people who understand the work should help shape the intelligence, and share
                   in what it creates.
                 </p>
               </div>
@@ -148,11 +150,11 @@ const description =
                 <p class="product-promise">An operating system for work that simply gets done.</p>
                 <p class="product-copy">
                   Built for AI agents and humans working side by side. Work moves safely and
-                  autonomously — governed from the first action — so people spend their judgement
+                  autonomously, governed from the first action, so people spend their judgement
                   where it matters.
                 </p>
                 <p class="product-tags">For agents and humans · Safe autonomy · Governed by default</p>
-                <a class="company-link" href="https://helix.work" rel="noopener">helix.work <span aria-hidden="true">→</span></a>
+                <a class="company-link" href="https://helix.work" target="_blank" rel="noopener noreferrer" data-track="helix-site">helix.work <span aria-hidden="true">→</span></a>
               </div>
             </article>
 
@@ -162,11 +164,14 @@ const description =
                 <h3>Albion</h3>
                 <p class="product-promise">Intelligence that answers to no one else.</p>
                 <p class="product-copy">
-                  A family of open-source models that keep reasoning sovereign — independent of the
+                  A family of open-source models that keep reasoning sovereign: independent of the
                   frontier labs, at a fraction of the cost. Taught by the people who know the work.
                 </p>
                 <p class="product-tags">Open source · Sovereign by design · Radically lower cost</p>
-                <a class="company-link" href="#talk" data-interest="albion">Join the waitlist <span aria-hidden="true">→</span></a>
+                <div class="product-links">
+                  <a class="company-link" href="https://albion.helix.work" target="_blank" rel="noopener noreferrer" data-track="albion-site">albion.helix.work <span aria-hidden="true">→</span></a>
+                  <a class="company-link" href="#talk" data-interest="albion" data-track="albion-waitlist">Join the waitlist <span aria-hidden="true">→</span></a>
+                </div>
               </div>
             </article>
           </div>
@@ -178,14 +183,14 @@ const description =
                 <h3>MindLynx Open Source</h3>
                 <p>
                   The tools we prove, released for everyone to build on. What we run in
-                  production — agents, scaffolding, evaluations — published as we go.
+                  production (agents, scaffolding, evaluations), published as we go.
                 </p>
               </article>
               <article class="coming-item">
                 <h3>Cortex</h3>
                 <p>
-                  Memory that remains yours. A different answer to who holds what you know —
-                  announcement to follow.
+                  Memory that remains yours. A different answer to who holds what you know.
+                  Announcement to follow.
                 </p>
               </article>
               <article class="coming-item">
@@ -209,7 +214,7 @@ const description =
                 as a partner in the business. If you have an idea worth taking to market, we
                 would like to hear it.
               </p>
-              <a class="partner-link" href="#talk" data-interest="partner">Start the conversation <span aria-hidden="true">→</span></a>
+              <a class="partner-link" href="#talk" data-interest="partner" data-track="partner-start">Start the conversation <span aria-hidden="true">→</span></a>
             </div>
           </div>
         </div>
@@ -224,7 +229,7 @@ const description =
               We are building this now. We release it piece by piece, publish what we prove and say
               clearly what remains unfinished.
             </p>
-            <p>If you want to watch it happen — or tell us where we're wrong — we'd like that.</p>
+            <p>If you want to watch it happen, or tell us where we're wrong, we'd like that.</p>
           </div>
         </div>
       </section>
@@ -234,13 +239,13 @@ const description =
         <div class="shell contact-grid">
           <div class="reveal">
             <p class="section-label">Talk to us</p>
-            <a class="contact-mail" href="mailto:hello@mindlynx.ai">hello@mindlynx.ai</a>
+            <a class="contact-mail" href="mailto:hello@mindlynx.ai" data-track="contact-mail">hello@mindlynx.ai</a>
           </div>
           <div class="reveal">
             <h2>The future should belong to more people.</h2>
             <p class="contact-lead">
               Whether you want to work with Helix, join the Albion waitlist, partner on a product
-              or simply tell us what you think — write to us. A person reads every message.
+              or simply tell us what you think, write to us. A person reads every message.
             </p>
 
             <form class="contact-form" id="contact-form" novalidate>
@@ -264,23 +269,30 @@ const description =
                 <label for="message">Message <span class="field-hint">(optional)</span></label>
                 <textarea id="message" name="message" maxlength="5000" placeholder="We do read everything."></textarea>
               </div>
+              <div class="field consent-field" hidden>
+                <label class="consent-label">
+                  <input id="consent" name="consent" type="checkbox" value="yes" />
+                  <span>
+                    Email me Albion news and launch updates. I can unsubscribe at any time.
+                  </span>
+                </label>
+              </div>
               <div class="hp" aria-hidden="true">
                 <label for="company">Company</label>
                 <input id="company" name="company" type="text" tabindex="-1" autocomplete="off" />
               </div>
               <div class="form-footer">
-                <button class="button button-primary" type="submit">Send message</button>
+                <button class="button button-primary" type="submit" data-track="form-submit">Send message</button>
                 <p class="form-status" role="status"></p>
               </div>
               <p class="form-note">
-                We use your details to reply, and — if you join the Albion waitlist — to send you
-                Albion news, which you can leave at any time. Nothing else, no sharing.
-                <a href="/privacy">Privacy</a>.
+                We use your details to reply. The Albion list is opt-in via the box above and you
+                can leave it at any time. Nothing else, no sharing. <a href="/privacy">Privacy</a>.
               </p>
             </form>
 
             <div class="form-success" hidden>
-              <p>Thank you — we'll be in touch.</p>
+              <p>Thank you. We'll be in touch.</p>
             </div>
           </div>
         </div>
@@ -290,9 +302,11 @@ const description =
     <footer class="site-footer">
       <div class="shell">
         <span>MindLynx Ltd · London</span>
-        <span><a href="/privacy">Privacy</a> · Building in Britain · Building in the open</span>
+        <span><a href="/privacy" data-track="footer-privacy">Privacy</a> · Building in Britain · Building in the open</span>
       </div>
     </footer>
+
+    <CookieNotice />
 
     <script>
       const header = document.querySelector('.site-header')!;
@@ -326,8 +340,18 @@ const description =
       document.querySelectorAll('.reveal').forEach((el) => io.observe(el));
 
       const interestSelect = document.querySelector<HTMLSelectElement>('#interest')!;
+      const consentField = document.querySelector<HTMLElement>('.consent-field')!;
+      const consentBox = document.querySelector<HTMLInputElement>('#consent')!;
+      const syncConsent = () => {
+        consentField.hidden = interestSelect.value !== 'albion';
+        if (consentField.hidden) consentBox.checked = false;
+      };
+      interestSelect.addEventListener('change', syncConsent);
       document.querySelectorAll<HTMLAnchorElement>('[data-interest]').forEach((a) =>
-        a.addEventListener('click', () => (interestSelect.value = a.dataset.interest!))
+        a.addEventListener('click', () => {
+          interestSelect.value = a.dataset.interest!;
+          syncConsent();
+        })
       );
 
       const form = document.querySelector<HTMLFormElement>('#contact-form')!;
@@ -337,6 +361,12 @@ const description =
         event.preventDefault();
         status.classList.remove('is-error');
         if (!form.reportValidity()) return;
+        if (interestSelect.value === 'albion' && !consentBox.checked) {
+          status.textContent = 'The waitlist is an email list, so please tick the box to join it.';
+          status.classList.add('is-error');
+          consentBox.focus();
+          return;
+        }
         const button = form.querySelector<HTMLButtonElement>('button[type=submit]')!;
         button.disabled = true;
         status.textContent = 'Sending…';
@@ -344,13 +374,24 @@ const description =
           const res = await fetch('/api/contact', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(Object.fromEntries(new FormData(form))),
+            body: JSON.stringify({
+              ...Object.fromEntries(new FormData(form)),
+              consentedAt: consentBox.checked ? new Date().toISOString() : '',
+              pageUrl: location.href,
+            }),
           });
           if (!res.ok) throw new Error(String(res.status));
           form.hidden = true;
           success.hidden = false;
+          try {
+            (window as any).Tachyon?.emit('LeadCaptured', {
+              formType: 'contact',
+              interest: interestSelect.value,
+              marketingOptIn: consentBox.checked,
+            });
+          } catch {}
         } catch {
-          status.textContent = 'Something went wrong — please email hello@mindlynx.ai instead.';
+          status.textContent = 'Something went wrong. Please email hello@mindlynx.ai instead.';
           status.classList.add('is-error');
           button.disabled = false;
         }

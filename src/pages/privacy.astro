@@ -1,7 +1,8 @@
 ---
 import '../styles/global.css';
+import CookieNotice from '../components/CookieNotice.astro';
 
-const title = 'Privacy — MindLynx';
+const title = 'Privacy · MindLynx';
 const updated = '27 July 2026';
 ---
 
@@ -16,11 +17,12 @@ const updated = '27 July 2026';
     <meta name="robots" content="index, follow" />
     <link rel="icon" type="image/png" href="/favicon.png" />
     <link rel="canonical" href="https://mindlynx.ai/privacy" />
+    <script is:inline src="/tachyon-emit.js" defer></script>
   </head>
 
   <body>
     <header class="site-header is-scrolled">
-      <a class="brand" href="/" aria-label="MindLynx — home">
+      <a class="brand" href="/" aria-label="MindLynx home">
         <img class="brand-mark" src="/images/brand-mark.png" alt="" width="31" height="31" />
         MindLynx
       </a>
@@ -40,30 +42,43 @@ const updated = '27 July 2026';
 
         <h2>What we collect</h2>
         <p>
-          Only what you type into the contact form: your name, your email address, what you're
-          writing about, and your message. Nothing more. We don't use analytics, advertising
-          trackers or third-party cookies on this site.
+          Two things. First, what you type into the contact form: your name, your email address,
+          what you're writing about, and your message. Second, anonymous visit measurement through
+          our own first-party analytics (Tachyon): which pages load, what gets clicked, where a
+          visit came from, your device type and how fast the page loaded. No advertising trackers,
+          no third-party analytics, no cross-site anything.
+        </p>
+
+        <h2>Cookies</h2>
+        <p>
+          We set one cookie: <code>_tch_vid</code>, a random identifier that lets us recognise a
+          returning browser for up to a year. A companion session identifier
+          (<code>_tch_sid</code>) lives only until you close the tab. Both are first-party, are
+          never shared, and contain nothing about who you are. Your browser's cookie controls
+          remove them at any time. Preferences you choose on the site (like dismissing the cookie
+          notice) are stored locally in your browser and never leave it.
         </p>
 
         <h2>Why we hold it</h2>
         <p>
           To answer you. That's our legitimate interest in responding to someone who has
-          deliberately contacted us. If you select <em>The Albion waitlist</em>, we also add your
-          name and email to our Albion announcement list — that part is your consent, given by
-          choosing it, and you can withdraw it whenever you like.
+          deliberately contacted us, and the same basis covers our anonymous visit measurement.
+          The Albion announcement list is different: we only add you when you tick the consent box
+          on the form, we record when you ticked it, and you can withdraw at any time by
+          unsubscribing or emailing us.
         </p>
 
         <h2>Who else sees it</h2>
         <p>
           Our email is delivered by <a href="https://resend.com/legal/dpa" rel="noopener">Resend</a>,
           which processes messages on our behalf and hosts the Albion list. The site is served by
-          Render. Both act as processors under our instructions. Nobody else receives your details,
-          and we never sell them.
+          Render, and our visit measurement runs on our own Tachyon service. All act as processors
+          under our instructions. Nobody else receives your details, and we never sell them.
         </p>
 
         <h2>How long we keep it</h2>
         <p>
-          Correspondence stays in our inbox while it's useful, and we clear it out when it isn't —
+          Correspondence stays in our inbox while it's useful, and we clear it out when it isn't,
           within two years at the latest. Waitlist entries stay until Albion launches or until you
           unsubscribe, whichever comes first.
         </p>
@@ -72,7 +87,7 @@ const updated = '27 July 2026';
         <p>
           Under UK GDPR you can ask us for a copy of what we hold, ask us to correct or delete it,
           object to how we're using it, or withdraw consent for the waitlist. Email
-          <a href="mailto:hello@mindlynx.ai">hello@mindlynx.ai</a> and we'll action it — no forms,
+          <a href="mailto:hello@mindlynx.ai">hello@mindlynx.ai</a> and we'll action it. No forms,
           no friction. If we get it wrong, you can complain to the
           <a href="https://ico.org.uk" rel="noopener">Information Commissioner's Office</a>.
         </p>
@@ -94,5 +109,7 @@ const updated = '27 July 2026';
         <span>Building in Britain · Building in the open</span>
       </div>
     </footer>
+
+    <CookieNotice />
   </body>
 </html>

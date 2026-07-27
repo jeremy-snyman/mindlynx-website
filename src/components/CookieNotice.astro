@@ -1,0 +1,21 @@
+<aside class="cookie-notice" hidden>
+  <p>
+    We use one first-party cookie to understand visits. No third parties, no advertising.
+    <a href="/privacy">Privacy</a>.
+  </p>
+  <div class="cookie-actions">
+    <button class="button button-primary" type="button" data-cookie="accepted">Fine by me</button>
+    <button class="button button-quiet" type="button" data-cookie="declined">No thanks</button>
+  </div>
+</aside>
+
+<script>
+  const notice = document.querySelector<HTMLElement>('.cookie-notice')!;
+  if (!localStorage.getItem('cookie-consent')) notice.hidden = false;
+  notice.querySelectorAll<HTMLButtonElement>('[data-cookie]').forEach((b) =>
+    b.addEventListener('click', () => {
+      localStorage.setItem('cookie-consent', b.dataset.cookie!);
+      notice.hidden = true;
+    })
+  );
+</script>
