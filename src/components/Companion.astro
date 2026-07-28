@@ -566,208 +566,173 @@
     });
   }
 
-  /* ---- voice: Gemini Live, ported guards intact ---- */
-  const GENAI_CDN = 'https://cdn.jsdelivr.net/npm/@google/genai@2.11.0/+esm'; /* pinned; keep in step with package.json */
-  const WORKLET_SRC =
-    "class P extends AudioWorkletProcessor{process(inputs){var ch=inputs[0][0];if(ch)this.port.postMessage(ch.slice(0));return true;}}registerProcessor('pcm-forwarder',P);";
-  const live: any = { session: null, ctxIn: null, ctxOut: null, stream: null, sources: [], cursor: 0, timer: null, userBub: null, agentBub: null };
+  /* ---- voice: the Helix Pipecat service (Deepgram STT -> Gemini -> Cartesia TTS) ---- */
   const vlog = (stage: string, detail?: unknown) => console.log('[voice]', stage, detail || '');
 
-  function b64FromBuf(buf: ArrayBuffer) {
-    const b = new Uint8Array(buf);
-    let s = '';
-    for (let i = 0; i < b.length; i++) s += String.fromCharCode(b[i]);
-    return btoa(s);
-  }
-  function playPcm(b64: string) {
-    if (!live.ctxOut) return;
-    if (!live.audioLogged) {
-      live.audioLogged = true;
-      vlog('first-audio', { ctxOut: live.ctxOut.state, bytes: b64.length });
+  /* The TTS pipeline can re-emit the tail of a segment, so a reply arrives with its
+     last sentence duplicated. Only CONSECUTIVE duplicates go: a reply may
+     legitimately repeat a sentence later on. (Ported from helix-ui.) */
+  function collapseRepeatedSentences(text: string): string {
+    const parts = text.match(/[^.!?]+[.!?]*\s*/g);
+    if (!parts || parts.length < 2) return text;
+    const kept: string[] = [];
+    for (const part of parts) {
+      const previous = kept[kept.length - 1];
+      const same = previous !== undefined && previous.trim().toLowerCase() === part.trim().toLowerCase();
+      if (same && part.trim().includes(' ')) continue;
+      kept.push(part);
     }
-    const bin = atob(b64);
-    const bytes = new Uint8Array(bin.length);
-    for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
-    const i16 = new Int16Array(bytes.buffer);
-    const f32 = new Float32Array(i16.length);
-    for (let j = 0; j < i16.length; j++) f32[j] = i16[j] / 32768;
-    const ab = live.ctxOut.createBuffer(1, f32.length, 24000);
-    ab.getChannelData(0).set(f32);
-    const s = live.ctxOut.createBufferSource();
-    s.buffer = ab;
-    s.connect(live.dest || live.ctxOut.destination);
-    live.cursor = Math.max(live.ctxOut.currentTime, live.cursor);
-    s.start(live.cursor);
-    live.cursor += ab.duration;
-    live.sources.push(s);
-    s.onended = () => {
-      const k = live.sources.indexOf(s);
-      if (k > -1) live.sources.splice(k, 1);
-    };
+    return kept.join('').trim();
   }
-  function stopPlayback() {
-    live.sources.forEach((s: AudioBufferSourceNode) => {
-      try { s.stop(); } catch {}
-    });
-    live.sources = [];
-    live.cursor = 0;
-  }
-  function transcript(role: 'user' | 'agent', text: string) {
-    const key = role === 'user' ? 'userBub' : 'agentBub';
-    if (!live[key]) live[key] = el('', role);
-    live[key].textContent += text;
-    chat.scrollTop = chat.scrollHeight;
-  }
-  function finaliseTranscripts() {
-    if (live.userBub && live.userBub.textContent) history.push({ role: 'user', content: live.userBub.textContent });
-    if (live.agentBub && live.agentBub.textContent) history.push({ role: 'agent', content: live.agentBub.textContent });
-    live.userBub = live.agentBub = null;
-  }
-  function onLiveMessage(msg: any) {
-    if (msg.data) playPcm(msg.data);
-    const sc = msg.serverContent;
-    if (sc) {
-      if (sc.interrupted) { vlog('interrupted'); stopPlayback(); }
-      if (sc.inputTranscription && sc.inputTranscription.text) transcript('user', sc.inputTranscription.text);
-      if (sc.outputTranscription && sc.outputTranscription.text) transcript('agent', sc.outputTranscription.text);
-      if (sc.turnComplete) finaliseTranscripts();
+
+  /* One reply is several TTS utterances, so bot-stopped-speaking fires several times
+     per answer; wait for real quiet before treating the turn as finished. */
+  const TURN_SETTLE_MS = 1500;
+
+  const live: any = { client: null, audioEl: null, timer: null, settle: null, connBub: null, userBub: null, botBub: null, botText: '' };
+
+  function finaliseUser() {
+    if (live.userBub) {
+      const t = live.userBub.textContent || '';
+      if (t) history.push({ role: 'user', content: t });
+      live.userBub = null;
     }
-    if (msg.toolCall && msg.toolCall.functionCalls) {
-      msg.toolCall.functionCalls.forEach((fc: any) => {
-        if (fc.name !== 'show_action_form') return;
-        const a = fc.args || {};
-        lead.name = a.name || '';
-        lead.email = a.email || '';
-        showActionForm(a.intent || 'send_info', a.topic || '');
-        try {
-          live.session.sendToolResponse({ functionResponses: [{ id: fc.id, name: fc.name, response: { result: 'form_shown_awaiting_human_click' } }] });
-        } catch {}
-      });
-    }
-    if (msg.goAway) stopLive('Voice session ending. Tap the mic to reconnect.');
   }
+  function finaliseBot() {
+    if (live.settle) { clearTimeout(live.settle); live.settle = null; }
+    if (live.botBub) {
+      const t = collapseRepeatedSentences(live.botText.trim());
+      live.botBub.textContent = t;
+      if (t) history.push({ role: 'agent', content: t });
+      live.botBub = null;
+      live.botText = '';
+    }
+  }
+
+  function refreshVoiceUi() {
+    voiceBtn.textContent = live.client ? 'Voice: live · stop' : 'Voice: start';
+  }
+
   function stopLive(notice?: string) {
     if (live.timer) { clearTimeout(live.timer); live.timer = null; }
     if (live.connBub) { live.connBub.textContent = 'Voice did not connect this time.'; live.connBub = null; }
-    stopPlayback();
-    finaliseTranscripts();
-    if (live.session) { const s = live.session; live.session = null; try { s.close(); } catch {} }
-    if (live.stream) { live.stream.getTracks().forEach((t: MediaStreamTrack) => t.stop()); live.stream = null; }
-    if (live.audioEl) { try { live.audioEl.pause(); } catch {} live.audioEl = null; live.dest = null; }
-    if (live.ctxIn) { live.ctxIn.close().catch(() => {}); live.ctxIn = null; }
-    if (live.ctxOut) { live.ctxOut.close().catch(() => {}); live.ctxOut = null; }
+    finaliseUser();
+    finaliseBot();
+    if (live.client) { const c = live.client; live.client = null; try { c.disconnect(); } catch {} }
+    if (live.audioEl) { try { live.audioEl.pause(); } catch {} live.audioEl = null; }
     mic.classList.remove('rec');
     refreshVoiceUi();
     if (notice) agentSay(notice);
   }
-  function refreshVoiceUi() {
-    voiceBtn.textContent = live.session ? 'Voice: live · stop' : 'Voice: start';
-  }
-  async function acquireMic() {
-    const base = { channelCount: 1, echoCancellation: true, noiseSuppression: true };
-    const stream = await navigator.mediaDevices.getUserMedia({ audio: base });
-    const isMobile = ((navigator as any).userAgentData && (navigator as any).userAgentData.mobile) || /iPhone|iPad|Android|Mobi/i.test(navigator.userAgent);
-    if (isMobile) return stream; /* on a phone the phone mic is the right mic */
-    const label = (stream.getAudioTracks()[0] || ({} as MediaStreamTrack)).label || '';
-    if (/headphone|headset|airpod|earbud/i.test(label)) return stream; /* a worn mic is the best mic */
-    if (!/phone|ipad|continuity/i.test(label)) return stream; /* "phone" catches renamed iPhones too */
-    /* macOS Continuity has hijacked the default input with a nearby phone: use the built-in mic instead */
-    const devs = await navigator.mediaDevices.enumerateDevices();
-    const ins = devs.filter((d) => d.kind === 'audioinput' && d.deviceId && d.deviceId !== 'default');
-    const builtin =
-      ins.find((d) => /built-?in|macbook|internal/i.test(d.label)) ||
-      ins.find((d) => !/phone|ipad|continuity/i.test(d.label));
-    if (!builtin) return stream;
-    vlog('mic-switch', { from: label, to: builtin.label });
-    stream.getTracks().forEach((t) => t.stop());
-    return navigator.mediaDevices.getUserMedia({ audio: Object.assign({ deviceId: { exact: builtin.deviceId } }, base) });
-  }
+
   async function startLive() {
     mic.classList.add('rec');
     voiceBtn.textContent = 'Voice: connecting…';
-    /* create the output context synchronously inside the click: created after the awaits,
-       Chrome may treat the gesture as expired and start it suspended = silent Vera */
-    live.ctxOut = new AudioContext({ sampleRate: 24000 });
-    /* play through an <audio> element: Chrome's echo canceller ignores raw Web Audio output,
-       so Vera's voice loops back into the mic and interrupts herself mid-sentence */
-    live.dest = live.ctxOut.createMediaStreamDestination();
-    live.audioEl = document.createElement('audio');
-    live.audioEl.srcObject = live.dest.stream;
-    live.audioEl.play().catch(() => {});
-    live.audioLogged = false;
     live.connBub = el('<span class="cmp-typing"><i></i><i></i><i></i></span>&nbsp; Connecting you to Vera&hellip;', 'agent');
-    vlog('start', { secure: window.isSecureContext, ctxOut: live.ctxOut.state });
-    /* mic permission first: a denial must not burn a rate-limited token mint */
-    live.stream = await acquireMic();
-    vlog('mic-ok', { device: (live.stream.getAudioTracks()[0] || {}).label || 'unknown' });
+    vlog('start', { secure: window.isSecureContext });
     const r = await fetch('/api/voice-token', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' });
     if (!r.ok) { vlog('mint-fail', { status: r.status }); throw new Error('mint ' + r.status); }
     const d = await r.json();
-    vlog('mint-ok', { model: d.model });
-    const mod = await import(/* @vite-ignore */ GENAI_CDN);
-    vlog('cdn-ok');
-    if (live.ctxOut.state === 'suspended') { vlog('ctx-suspended-resuming'); live.ctxOut.resume().catch(() => {}); }
-    const ai = new mod.GoogleGenAI({ apiKey: d.token, httpOptions: { apiVersion: 'v1alpha' } });
-    live.session = await ai.live.connect({
-      model: d.model,
-      config: { responseModalities: ['AUDIO'] }, /* everything else is locked in the token */
+    vlog('mint-ok');
+    const [cj, tj, dj] = await Promise.all([
+      import('@pipecat-ai/client-js'),
+      import('@pipecat-ai/small-webrtc-transport'),
+      import('@daily-co/daily-js'),
+    ]);
+    vlog('sdk-ok');
+    /* The transport's media manager reuses an existing Daily call instance. Creating it
+       ourselves lets us pin useDevicePreferenceCookies:false at the one choke point every
+       entry path reads its config from — otherwise Daily restores whichever microphone was
+       used LAST (a nearby iPhone over Continuity, in the worst case) and the agent goes
+       deaf with no visible error. (Ported from helix-ui, which hit exactly that.) */
+    const Daily = dj.default;
+    const call = Daily.getCallInstance() ?? Daily.createCallObject();
+    const originalLoad = call.load.bind(call);
+    (call as any).load = (props?: Record<string, unknown>) =>
+      originalLoad({
+        ...(props ?? {}),
+        dailyConfig: { ...((props?.dailyConfig as object) ?? {}), useDevicePreferenceCookies: false },
+      } as Parameters<typeof originalLoad>[0]);
+    /* A television in the room is speech; strip it before the track leaves the browser. */
+    void call.updateInputSettings({ audio: { processor: { type: 'noise-cancellation' } } }).catch(() => undefined);
+    void call
+      .setInputDevicesAsync({ audioDeviceId: 'default' })
+      .then((devices: any) => vlog('mic', devices?.mic?.label ?? 'unknown'))
+      .catch(() => undefined);
+
+    const client = new cj.PipecatClient({
+      transport: new tj.SmallWebRTCTransport(),
+      enableMic: true,
+      enableCam: false,
       callbacks: {
-        onmessage: onLiveMessage,
-        onerror: (e: any) => {
-          vlog('ws-error', { msg: String((e && e.message) || e).slice(0, 200) });
-          stopLive('Voice hit a snag. Press Voice to try again, or just type.');
+        onTrackStarted: (track: MediaStreamTrack) => {
+          if (track.kind !== 'audio') return;
+          if (!live.audioEl) {
+            live.audioEl = document.createElement('audio');
+            live.audioEl.autoplay = true;
+          }
+          live.audioEl.srcObject = new MediaStream([track]);
+          void live.audioEl.play().catch(() => undefined);
+          vlog('audio-attached');
         },
-        onclose: (e: any) => {
-          const reason = String((e && e.reason) || '');
-          vlog('ws-close', { code: e && e.code, reason: reason.slice(0, 120) });
-          if (live.session)
-            stopLive(/exhaust|quota/i.test(reason)
-              ? 'Vera’s voice is over its usage limit for the moment. Give it a minute and press Voice again, or just type.'
-              : undefined);
+        onUserTranscript: (data: any) => {
+          if (!data || !data.final || !data.text) return;
+          /* You speaking again ends the previous turn, whatever the agent was doing. */
+          if (live.botBub) finaliseBot();
+          if (!live.userBub) live.userBub = el('', 'user');
+          live.userBub.textContent = (live.userBub.textContent ? live.userBub.textContent + ' ' : '') + data.text.trim();
+          chat.scrollTop = chat.scrollHeight;
+        },
+        onBotTtsText: (data: any) => {
+          if (!data || !data.text) return;
+          if (!live.botBub) {
+            finaliseUser();
+            live.botBub = el('', 'agent');
+            live.botText = '';
+          }
+          live.botText += (live.botText ? ' ' : '') + data.text;
+          live.botBub.textContent = collapseRepeatedSentences(live.botText);
+          chat.scrollTop = chat.scrollHeight;
+        },
+        onBotStoppedSpeaking: () => {
+          /* NOT the end of the turn: each streamed sentence ends here. Wait for real quiet. */
+          if (live.settle) clearTimeout(live.settle);
+          live.settle = setTimeout(finaliseBot, TURN_SETTLE_MS);
+        },
+        onServerMessage: (data: any) => {
+          if (!data || data.type !== 'show_action_form') return;
+          lead.name = data.name || '';
+          lead.email = data.email || '';
+          showActionForm(data.intent || 'send_info', data.topic || '');
+        },
+        onDisconnected: () => {
+          if (live.client) stopLive('Voice session ended. Press Voice to reconnect, or just type.');
         },
       },
     });
+    live.client = client;
+    /* webrtcRequestParams, NOT {endpoint}: the bare-endpoint form is the deprecated
+       "start bot" flow and 400s against this server. */
+    await client.connect({
+      webrtcRequestParams: { endpoint: d.connectUrl, requestData: { website: d.website } },
+    });
     vlog('connected');
-    live.ctxIn = new AudioContext({ sampleRate: 16000 });
-    const srcNode = live.ctxIn.createMediaStreamSource(live.stream);
-    await live.ctxIn.audioWorklet.addModule(URL.createObjectURL(new Blob([WORKLET_SRC], { type: 'text/javascript' })));
-    const node = new AudioWorkletNode(live.ctxIn, 'pcm-forwarder');
-    node.port.onmessage = (e: MessageEvent) => {
-      if (!live.session) return;
-      const f32 = e.data as Float32Array;
-      const i16 = new Int16Array(f32.length);
-      for (let i = 0; i < f32.length; i++) {
-        const v = Math.max(-1, Math.min(1, f32[i]));
-        i16[i] = v < 0 ? v * 0x8000 : v * 0x7fff;
-      }
-      try {
-        live.session.sendRealtimeInput({ audio: { data: b64FromBuf(i16.buffer), mimeType: 'audio/pcm;rate=16000' } });
-      } catch {}
-    };
-    srcNode.connect(node);
     refreshVoiceUi();
     if (live.connBub) { live.connBub.textContent = 'You are through to Vera.'; live.connBub = null; }
-    /* nudge Vera to open the conversation herself: one short greeting, then wait */
-    try {
-      live.session.sendClientContent({
-        turns: [{ role: 'user', parts: [{ text: '(The visitor has just connected by voice. Greet them per A4: one short sentence, say who you are and ask what brought them along, then wait.)' }] }],
-        turnComplete: true,
-      });
-    } catch {}
     live.timer = setTimeout(() => stopLive('Voice session ended (five minute cap). Tap the mic to carry on.'), 300000);
   }
+
   function voiceFlow() {
-    if (live.session) { stopLive(); return; }
+    if (live.client) { stopLive(); return; }
     if (!LIVE.voice || !window.isSecureContext) return;
     startLive().catch((err) => {
-      console.warn('Gemini Live failed', err);
+      console.warn('voice failed', err);
       vlog('fail', { name: err && err.name, msg: String((err && err.message) || err).slice(0, 200) });
       stopLive();
       if (err && err.name === 'NotAllowedError') {
         agentSay('I could not get microphone access. Allow the microphone for this page and press Voice again, or just type.');
         return;
       }
-      /* no downgrade to the browser voice: offer a retry instead */
       agentSay('Vera’s voice line dropped while connecting. Press Voice to try again, or just type.');
     });
   }

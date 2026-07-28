@@ -27,7 +27,8 @@ export const GET: APIRoute = () =>
   json(200, {
     ok: true,
     agent: !!GEMINI_API_KEY,
-    voice: !!GEMINI_API_KEY,
+    // Voice now runs on the Pipecat service; it needs the offer-signing secret.
+    voice: !!import.meta.env.VOICE_OFFER_SECRET,
     calendly: import.meta.env.CALENDLY_URL || null,
   });
 

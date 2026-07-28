@@ -1,11 +1,18 @@
 export const prerender = false;
 
+import { createHmac } from 'node:crypto';
 import type { APIRoute } from 'astro';
-import { ACTION_TOOL, CONTEXT_PACK, SITE_SUFFIX, VOICE_SUFFIX, clientIp, rateLimit } from '../../lib/companion';
+import { CONTEXT_PACK, SITE_SUFFIX, VOICE_SUFFIX, clientIp, rateLimit } from '../../lib/companion';
 
-const GEMINI_API_KEY = import.meta.env.GEMINI_API_KEY ?? '';
-const GEMINI_LIVE_MODEL = import.meta.env.GEMINI_LIVE_MODEL ?? 'gemini-3.1-flash-live-preview';
-const GEMINI_VOICE = import.meta.env.GEMINI_VOICE ?? 'Aoede';
+// Voice runs on the Helix Pipecat service (Deepgram STT -> Gemini -> Cartesia
+// TTS over WebRTC). We mint a short-lived HMAC-signed payload carrying Vera's
+// instructions and voice; the service refuses anything unsigned, so the prompt
+// stays server-owned even though the offer endpoint is public.
+const VOICE_OFFER_SECRET = import.meta.env.VOICE_OFFER_SECRET ?? '';
+const VOICE_CONNECT_URL =
+  import.meta.env.VOICE_CONNECT_URL ?? 'https://app.helix.work/pipecat/api/offer';
+// Gemma: British female, distinct from Victoria (the in-product Helix voice).
+const VERA_VOICE_ID = import.meta.env.VERA_VOICE_ID ?? '62ae83ad-4f6a-430b-af41-a9bede9286ca';
 
 const json = (status: number, body: object, headers: Record<string, string> = {}) =>
   new Response(JSON.stringify(body), {
@@ -13,49 +20,25 @@ const json = (status: number, body: object, headers: Record<string, string> = {}
     headers: { 'Content-Type': 'application/json', ...headers },
   });
 
-async function mintVoiceToken() {
-  const { GoogleGenAI } = await import('@google/genai'); // only loaded when voice is used
-  const ai = new GoogleGenAI({ apiKey: GEMINI_API_KEY, httpOptions: { apiVersion: 'v1alpha' } });
-  const now = Date.now();
-  // The mint locks model, system instruction, tools and temperature so a
-  // hostile client cannot substitute its own.
-  const token = await ai.authTokens.create({
-    config: {
-      uses: 1,
-      expireTime: new Date(now + 10 * 60_000).toISOString(), // hard server-side session kill
-      newSessionExpireTime: new Date(now + 2 * 60_000).toISOString(), // window to actually connect
-      liveConnectConstraints: {
-        model: GEMINI_LIVE_MODEL,
-        config: {
-          responseModalities: ['AUDIO'],
-          temperature: 0.3,
-          // Pin the voice. Without speechConfig the Live API may pick a
-          // fresh voice per response, so Vera changed voice mid-conversation.
-          speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: GEMINI_VOICE } } },
-          systemInstruction: CONTEXT_PACK + SITE_SUFFIX + VOICE_SUFFIX,
-          tools: [ACTION_TOOL],
-          inputAudioTranscription: {},
-          outputAudioTranscription: {},
-        },
-      },
-      httpOptions: { apiVersion: 'v1alpha' },
-    },
-  });
-  return token.name;
-}
-
 export const POST: APIRoute = async ({ request, clientAddress }) => {
   const ip = clientIp(request, clientAddress);
   const limited = rateLimit('voice', ip);
   if (!limited.ok) {
     return json(429, { ok: false, error: 'Too many requests.' }, { 'Retry-After': String(limited.retryAfter) });
   }
-  if (!GEMINI_API_KEY) return json(503, { ok: false, error: 'Voice is not configured.' });
-  try {
-    const token = await mintVoiceToken();
-    return json(200, { token, model: GEMINI_LIVE_MODEL });
-  } catch (err: any) {
-    console.error('voice token mint failed:', err?.message || err);
-    return json(503, { ok: false, error: 'Voice is unavailable just now.' });
-  }
+  if (!VOICE_OFFER_SECRET) return json(503, { ok: false, error: 'Voice is not configured.' });
+
+  const payload = Buffer.from(
+    JSON.stringify({
+      instructions: CONTEXT_PACK + SITE_SUFFIX + VOICE_SUFFIX,
+      voiceId: VERA_VOICE_ID,
+      site: 'mindlynx.ai',
+      keyterms: ['MindLynx', 'Helix', 'Albion', 'Cortex', 'Tachyon', 'Pulse', 'Vera'],
+      exp: Math.floor(Date.now() / 1000) + 120,
+    })
+  )
+    .toString('base64url');
+  const sig = createHmac('sha256', VOICE_OFFER_SECRET).update(payload).digest('hex');
+
+  return json(200, { connectUrl: VOICE_CONNECT_URL, website: { payload, sig } });
 };
