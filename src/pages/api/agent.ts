@@ -17,6 +17,9 @@ import {
 
 const GEMINI_API_KEY = import.meta.env.GEMINI_API_KEY ?? '';
 const GEMINI_MODEL = import.meta.env.GEMINI_MODEL ?? 'gemini-3.5-flash';
+// With an Anthropic key present, Claude is the brain; Gemini stays the fallback.
+const ANTHROPIC_API_KEY = import.meta.env.ANTHROPIC_API_KEY ?? '';
+const CLAUDE_MODEL = import.meta.env.CLAUDE_MODEL ?? 'claude-opus-5';
 
 const json = (status: number, body: object, headers: Record<string, string> = {}) =>
   new Response(JSON.stringify(body), {
@@ -27,7 +30,7 @@ const json = (status: number, body: object, headers: Record<string, string> = {}
 export const GET: APIRoute = () =>
   json(200, {
     ok: true,
-    agent: !!GEMINI_API_KEY,
+    agent: !!(ANTHROPIC_API_KEY || GEMINI_API_KEY),
     // Voice now runs on the Pipecat service; it needs the offer-signing secret.
     voice: !!import.meta.env.VOICE_OFFER_SECRET,
     calendly: import.meta.env.CALENDLY_URL || null,
@@ -67,22 +70,28 @@ async function geminiParts(contents: unknown[]): Promise<any[]> {
   return (await res.json()).candidates?.[0]?.content?.parts ?? [];
 }
 
+// The one server-executed tool: look up real slots, hand them back, let the
+// model offer them. One round only; a second lookup waits for the next turn.
+async function availabilityResult(args: any): Promise<object> {
+  try {
+    const slots = await getAvailability(args?.from, args?.to);
+    return slots.length
+      ? {
+          slots: slots.slice(0, 12).map((s) => s.label),
+          note: 'offer the visitor two or three of these in your reply and let them choose; only render the form once they have picked or declined to',
+        }
+      : { slots: [], note: 'nothing bookable in that window; ask for their preference in words' };
+  } catch {
+    return { error: 'availability lookup is unavailable; ask for their preference in words' };
+  }
+}
+
 async function callGemini(message: string, history: unknown) {
   const contents: any[] = toGeminiContents(message, history);
   let parts = await geminiParts(contents);
   let call = parts.find((p) => p.functionCall)?.functionCall;
   if (call?.name === 'check_availability') {
-    // The one server-executed tool: look up real slots, hand them back, let the
-    // model offer them. One round only; a second lookup waits for the next turn.
-    let response: object;
-    try {
-      const slots = await getAvailability(call.args?.from, call.args?.to);
-      response = slots.length
-        ? { slots: slots.slice(0, 12).map((s) => s.label) }
-        : { slots: [], note: 'nothing bookable in that window; ask for their preference in words' };
-    } catch {
-      response = { error: 'availability lookup is unavailable; ask for their preference in words' };
-    }
+    const response = await availabilityResult(call.args);
     // Echo the model turn back VERBATIM: Gemini 3.x signs its function calls
     // (thoughtSignature) and rejects a replay that drops the signature.
     contents.push({ role: 'model', parts });
@@ -109,6 +118,105 @@ async function callGemini(message: string, history: unknown) {
   return { reply, action };
 }
 
+/* ---------------- Claude path (the default brain when a key is present) ---------------- */
+
+// Anthropic tools use lowercase JSON Schema types; convert the shared
+// declarations rather than maintaining a second copy.
+const toClaudeSchema = (p: any): any => {
+  if (Array.isArray(p)) return p.map(toClaudeSchema);
+  if (p && typeof p === 'object') {
+    const out: any = {};
+    for (const [k, v] of Object.entries(p)) out[k] = k === 'type' && typeof v === 'string' ? v.toLowerCase() : toClaudeSchema(v);
+    return out;
+  }
+  return p;
+};
+const CLAUDE_TOOLS = (ACTION_TOOL.functionDeclarations as any[]).map((f) => ({
+  name: f.name,
+  description: f.description,
+  input_schema: toClaudeSchema(f.parameters),
+}));
+
+function toClaudeMessages(message: string, history: unknown) {
+  const messages: { role: 'user' | 'assistant'; content: any }[] = [];
+  for (const turn of (Array.isArray(history) ? (history as Turn[]).slice(-20) : [])) {
+    if (!turn || typeof turn.content !== 'string') continue;
+    const text = turn.content.replace(/<[^>]+>/g, '').trim();
+    if (!text) continue;
+    const role = turn.role === 'agent' ? 'assistant' : 'user';
+    const last = messages[messages.length - 1];
+    if (last && last.role === role) last.content += '\n' + text.slice(0, 2000); // roles must alternate
+    else messages.push({ role, content: text.slice(0, 2000) });
+  }
+  while (messages.length && messages[0].role === 'assistant') messages.shift(); // must open with user
+  const last = messages[messages.length - 1];
+  if (!last || last.role !== 'user' || last.content !== message) {
+    messages.push({ role: 'user', content: message }); // page pushes message into history pre-POST; dedupe
+  }
+  return messages;
+}
+
+async function claudeCreate(messages: any[]): Promise<any> {
+  const res = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'x-api-key': ANTHROPIC_API_KEY,
+      'anthropic-version': '2023-06-01',
+    },
+    body: JSON.stringify({
+      model: CLAUDE_MODEL,
+      // No temperature: Opus 5 thinks by default and rejects one. Determinism
+      // here comes from the pack, not the sampler.
+      max_tokens: 2048,
+      // The pack is static: caching it keeps Opus pricing sane per turn.
+      system: [{ type: 'text', text: CONTEXT_PACK + SITE_SUFFIX + TOOL_SUFFIX, cache_control: { type: 'ephemeral' } }],
+      tools: CLAUDE_TOOLS,
+      messages,
+    }),
+    signal: AbortSignal.timeout(25_000),
+  });
+  if (!res.ok) throw new Error(`claude ${res.status}`);
+  return res.json();
+}
+
+async function callClaude(message: string, history: unknown) {
+  const messages = toClaudeMessages(message, history);
+  let data = await claudeCreate(messages);
+  let toolUse = (data.content ?? []).find((b: any) => b.type === 'tool_use');
+  if (toolUse?.name === 'check_availability') {
+    const response = await availabilityResult(toolUse.input);
+    messages.push({ role: 'assistant', content: data.content });
+    messages.push({
+      role: 'user',
+      content: [{ type: 'tool_result', tool_use_id: toolUse.id, content: JSON.stringify(response) }],
+    });
+    data = await claudeCreate(messages);
+    toolUse = (data.content ?? []).find((b: any) => b.type === 'tool_use');
+  }
+  let reply = (data.content ?? [])
+    .filter((b: any) => b.type === 'text')
+    .map((b: any) => b.text)
+    .join(' ')
+    .trim();
+  let action;
+  if (toolUse?.name === 'show_action_form') {
+    const args = toolUse.input || {};
+    const intent = (INTENTS as readonly string[]).includes(args.intent) ? (args.intent as Intent) : 'send_info';
+    action = {
+      type: 'show_action_form',
+      intent,
+      name: clean(args.name, 200),
+      email: clean(args.email, 254).toLowerCase(),
+      topic: clean(args.topic, 300),
+      preferredTime: clean(args.preferredTime, 120),
+    };
+    reply ||= 'Here is your form, pre-filled. Check the details, then press the button. The button press is yours to make, not mine.';
+  }
+  if (!reply) throw new Error('empty reply');
+  return { reply, action };
+}
+
 export const POST: APIRoute = async ({ request, clientAddress }) => {
   const ip = clientIp(request, clientAddress);
   const limited = rateLimit('chat', ip);
@@ -121,11 +229,13 @@ export const POST: APIRoute = async ({ request, clientAddress }) => {
   } catch {
     return json(400, { ok: false, error: 'Invalid JSON' });
   }
-  if (!GEMINI_API_KEY) return json(503, { fallback: true });
+  if (!ANTHROPIC_API_KEY && !GEMINI_API_KEY) return json(503, { fallback: true });
   const message = clean(body.message, 2000);
   if (!message) return json(400, { ok: false, error: 'A message is required.' });
   try {
-    const { reply, action } = await callGemini(message, body.history);
+    const { reply, action } = ANTHROPIC_API_KEY
+      ? await callClaude(message, body.history)
+      : await callGemini(message, body.history);
     const filtered = redact(reply);
     if (filtered.found.length) {
       console.warn('[companion] redacted:', filtered.found.join(','), 'ip:', ip);
