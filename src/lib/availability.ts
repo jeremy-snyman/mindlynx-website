@@ -16,11 +16,20 @@ const api = (path: string) =>
     signal: AbortSignal.timeout(8_000),
   });
 
+async function resolveUserUri(): Promise<string> {
+  const me = await api('/users/me');
+  if (me.ok) return (await me.json()).resource.uri;
+  // A scoped PAT may lack users:read, but the token itself names its user.
+  try {
+    const claims = JSON.parse(Buffer.from(TOKEN.split('.')[1], 'base64').toString());
+    if (claims.user_uuid) return `https://api.calendly.com/users/${claims.user_uuid}`;
+  } catch {}
+  throw new Error(`calendly users/me ${me.status}`);
+}
+
 async function resolveEventType(): Promise<string> {
   if (eventTypeUri) return eventTypeUri;
-  const me = await api('/users/me');
-  if (!me.ok) throw new Error(`calendly users/me ${me.status}`);
-  const userUri = (await me.json()).resource.uri;
+  const userUri = await resolveUserUri();
   const et = await api(`/event_types?user=${encodeURIComponent(userUri)}&active=true`);
   if (!et.ok) throw new Error(`calendly event_types ${et.status}`);
   const types: any[] = (await et.json()).collection ?? [];
