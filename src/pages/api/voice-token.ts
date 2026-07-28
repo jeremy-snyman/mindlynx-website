@@ -36,6 +36,8 @@ export const POST: APIRoute = async ({ request, clientAddress }) => {
       instructions: CONTEXT_PACK + SITE_SUFFIX + VOICE_SUFFIX,
       voiceId: VERA_VOICE_ID,
       voiceSpeed: VERA_VOICE_SPEED,
+      // Where the voice service reads scoping-call slots from (public, no secrets).
+      availabilityUrl: import.meta.env.VOICE_AVAILABILITY_URL ?? 'https://mindlynx.ai/api/availability',
       site: 'mindlynx.ai',
       keyterms: ['MindLynx', 'Helix', 'Albion', 'Cortex', 'Tachyon', 'Pulse', 'Vera'],
       exp: Math.floor(Date.now() / 1000) + 120,

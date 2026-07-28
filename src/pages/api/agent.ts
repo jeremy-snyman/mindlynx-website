@@ -1,6 +1,7 @@
 export const prerender = false;
 
 import type { APIRoute } from 'astro';
+import { getAvailability } from '../../lib/availability';
 import {
   ACTION_TOOL,
   CONTEXT_PACK,
@@ -50,22 +51,46 @@ function toGeminiContents(message: string, history: unknown) {
   return contents;
 }
 
-async function callGemini(message: string, history: unknown) {
+async function geminiParts(contents: unknown[]): Promise<any[]> {
   const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', 'x-goog-api-key': GEMINI_API_KEY },
     body: JSON.stringify({
       systemInstruction: { parts: [{ text: CONTEXT_PACK + SITE_SUFFIX + TOOL_SUFFIX }] },
-      contents: toGeminiContents(message, history),
+      contents,
       generationConfig: { temperature: 0.3, maxOutputTokens: 2000 }, // the model thinks inside this budget; 500 left answers truncated
       tools: [ACTION_TOOL],
     }),
     signal: AbortSignal.timeout(10_000),
   });
   if (!res.ok) throw new Error(`gemini ${res.status}`);
-  const parts: any[] = (await res.json()).candidates?.[0]?.content?.parts ?? [];
+  return (await res.json()).candidates?.[0]?.content?.parts ?? [];
+}
+
+async function callGemini(message: string, history: unknown) {
+  const contents: any[] = toGeminiContents(message, history);
+  let parts = await geminiParts(contents);
+  let call = parts.find((p) => p.functionCall)?.functionCall;
+  if (call?.name === 'check_availability') {
+    // The one server-executed tool: look up real slots, hand them back, let the
+    // model offer them. One round only; a second lookup waits for the next turn.
+    let response: object;
+    try {
+      const slots = await getAvailability(call.args?.from, call.args?.to);
+      response = slots.length
+        ? { slots: slots.slice(0, 12).map((s) => s.label) }
+        : { slots: [], note: 'nothing bookable in that window; ask for their preference in words' };
+    } catch {
+      response = { error: 'availability lookup is unavailable; ask for their preference in words' };
+    }
+    // Echo the model turn back VERBATIM: Gemini 3.x signs its function calls
+    // (thoughtSignature) and rejects a replay that drops the signature.
+    contents.push({ role: 'model', parts });
+    contents.push({ role: 'user', parts: [{ functionResponse: { name: 'check_availability', response } }] });
+    parts = await geminiParts(contents);
+    call = parts.find((p) => p.functionCall)?.functionCall;
+  }
   let reply = parts.filter((p) => p.text).map((p) => p.text).join(' ').trim();
-  const call = parts.find((p) => p.functionCall)?.functionCall;
   let action;
   if (call?.name === 'show_action_form') {
     const args = call.args || {};

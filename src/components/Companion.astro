@@ -285,6 +285,18 @@
   }
   .cmp-form .cmp-cal { background: none; border: 1px solid var(--warm); color: var(--cream); }
   .cmp-form .cmp-go:disabled { opacity: 0.55; cursor: default; }
+  .cmp-slots { display: flex; flex-wrap: wrap; gap: 6px; }
+  .cmp-slot {
+    font-family: var(--sans);
+    font-size: 0.76rem;
+    border: 1px solid var(--line-light);
+    color: rgba(247, 241, 229, 0.8);
+    background: none;
+    padding: 7px 10px;
+    cursor: pointer;
+  }
+  .cmp-slot:hover { border-color: var(--warm); color: var(--cream); }
+  .cmp-slot.sel { background: var(--warm); border-color: var(--warm); color: #10150f; }
 
   @media (max-width: 640px) {
     .cmp-panel { inset: 0; width: 100%; height: 100dvh; border: 0; }
@@ -521,6 +533,35 @@
     html += '<button class="cmp-go" type="button">' + copy.go + '</button></div>';
     const bubble = el(html, 'agent');
     lastForm = bubble;
+    if (intent === 'scoping_call') {
+      // Real bookable times as tap-to-pick chips; choosing one also retargets the
+      // calendar button at that exact slot so booking is a single confirm click.
+      fetch('/api/availability')
+        .then((r) => (r.ok ? r.json() : null))
+        .then((av) => {
+          if (!av || !av.ok || !av.slots || !av.slots.length) return;
+          const timeField = bubble.querySelector<HTMLInputElement>('.cmp-f-time');
+          if (!timeField) return;
+          const wrap = document.createElement('div');
+          wrap.className = 'cmp-slots';
+          av.slots.slice(0, 6).forEach((s: { label: string; schedulingUrl: string }) => {
+            const b = document.createElement('button');
+            b.type = 'button';
+            b.className = 'cmp-slot';
+            b.textContent = s.label;
+            b.addEventListener('click', () => {
+              timeField.value = s.label;
+              wrap.querySelectorAll('.cmp-slot').forEach((x) => x.classList.remove('sel'));
+              b.classList.add('sel');
+              const cal = bubble.querySelector<HTMLAnchorElement>('.cmp-cal');
+              if (cal) cal.href = s.schedulingUrl;
+            });
+            wrap.appendChild(b);
+          });
+          timeField.insertAdjacentElement('afterend', wrap);
+        })
+        .catch(() => {});
+    }
     bubble.querySelector<HTMLButtonElement>('.cmp-go')!.addEventListener('click', () => {
       const n = bubble.querySelector<HTMLInputElement>('.cmp-f-name')!.value.trim();
       const e = bubble.querySelector<HTMLInputElement>('.cmp-f-email')!.value.trim();
