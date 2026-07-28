@@ -5,6 +5,7 @@ import {
   ACTION_TOOL,
   CONTEXT_PACK,
   INTENTS,
+  SITE_SUFFIX,
   TOOL_SUFFIX,
   clean,
   clientIp,
@@ -53,7 +54,7 @@ async function callGemini(message: string, history: unknown) {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', 'x-goog-api-key': GEMINI_API_KEY },
     body: JSON.stringify({
-      systemInstruction: { parts: [{ text: CONTEXT_PACK + TOOL_SUFFIX }] },
+      systemInstruction: { parts: [{ text: CONTEXT_PACK + SITE_SUFFIX + TOOL_SUFFIX }] },
       contents: toGeminiContents(message, history),
       generationConfig: { temperature: 0.3, maxOutputTokens: 2000 }, // the model thinks inside this budget; 500 left answers truncated
       tools: [ACTION_TOOL],

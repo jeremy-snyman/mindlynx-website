@@ -1,11 +1,29 @@
-/* Shared pieces of the Vera companion, ported from helix-website/server.mjs.
-   Single Render instance by design: the rate limiter is an in-memory map. */
+/* Shared pieces of the Vera companion. The knowledge and behaviour live in
+   src/content/companion-pack.md (Jeremy's v1.0 companion script); this file
+   only wires it. Single Render instance by design: the rate limiter is an
+   in-memory map. */
 
 import PACK from '../content/companion-pack.md?raw';
 
-export const CONTEXT_PACK = PACK;
+// Parts A to D go to the model. Part E is implementation reference and must
+// stay out of Vera's context (it names the filter tokens and site-copy gaps).
+export const CONTEXT_PACK = PACK.split('\n# Part E')[0];
 
-export const INTENTS = ['helix_waitlist', 'albion_waitlist', 'send_info', 'book_call'] as const;
+// Part E "site variable": selects emphasis and default next step, not knowledge.
+export const SITE_SUFFIX = `
+
+SITE
+
+You are on mindlynx.ai. Lead with why we build it, the four offerings and the consulting side, and mirror this site's published wording. Your default next step here is a conversation: a scoping call, or simply taking their details so the team comes back to them. The waitlists and the contributor register are there for anyone who asks about Helix or Albion.`;
+
+export const INTENTS = [
+  'helix_waitlist',
+  'albion_waitlist',
+  'albion_contributor',
+  'scoping_call',
+  'design_partner',
+  'send_info',
+] as const;
 export type Intent = (typeof INTENTS)[number];
 
 /* ---------------- rate limiter (in-memory sliding window) ---------------- */
@@ -47,15 +65,27 @@ export function clean(value: unknown, max: number) {
   return String(value ?? '').replace(/[\u0000-\u001f\u007f]/g, ' ').trim().slice(0, max);
 }
 
-/* ---------------- transcript filter (guardrails backstop) ---------------- */
+/* ---------------- transcript filter (guardrails backstop, per Part E) ----------------
+   Names Vera must never say, plus currency figures and percentages: she has
+   no approved number of either kind, so any that appears is an invention. */
 const FORBIDDEN = ['justin', 'seillen', 'ionos', 'tui', 'zoopla', 'ohme', 'eca'];
 const FORBIDDEN_RE = new RegExp(`\\b(${FORBIDDEN.join('|')})\\b`, 'gi');
+const MONEY_RE = /[£$€]\s?\d[\d,.]*\s?(?:million|billion|k|m|bn)?/gi;
+const PERCENT_RE = /\d[\d,.]*\s?(?:%|percent|per cent)/gi;
 
 export function redact(text: string) {
   const found: string[] = [];
-  const out = String(text).replace(FORBIDDEN_RE, (m) => {
+  let out = String(text).replace(FORBIDDEN_RE, (m) => {
     found.push(m.toLowerCase());
     return 'a topic for a proper conversation';
+  });
+  out = out.replace(MONEY_RE, (m) => {
+    found.push(m);
+    return 'a figure for a proper conversation';
+  });
+  out = out.replace(PERCENT_RE, (m) => {
+    found.push(m);
+    return 'a figure for a proper conversation';
   });
   return { text: out, found };
 }
@@ -68,18 +98,25 @@ export const ACTION_TOOL = {
       'Render a pre-filled action form in the chat. Call ONLY after the visitor has explicitly ' +
       'stated both their name and their email address in this conversation. Never call it with a ' +
       'guessed, assumed or example value; if you do not have a real email yet, ask for it instead. ' +
-      'The intent says what the form does: helix_waitlist and albion_waitlist join that waiting ' +
-      'list, send_info asks the team to email information, book_call asks the team to arrange a ' +
-      'call. If the visitor asks to change or correct a detail, call this tool again with the ' +
-      'corrected values and a fresh form replaces the old one. Render-only: the visitor reviews ' +
-      'the form and presses submit themselves.',
+      'The intent says what the form does: helix_waitlist joins the Helix waiting list, ' +
+      'albion_waitlist joins the Albion waitlist, albion_contributor joins the Albion contributor ' +
+      'register, scoping_call asks the team to arrange a scoping call, design_partner starts a ' +
+      'design partner conversation, send_info takes their details for any other follow-up or ' +
+      'handover so the team comes back to them. If the visitor asks to change or correct a ' +
+      'detail, call this tool again with the corrected values and a fresh form replaces the old ' +
+      'one. Render-only: the visitor reviews the form and presses submit themselves.',
     parameters: {
       type: 'OBJECT',
       properties: {
         intent: { type: 'STRING', enum: [...INTENTS], description: 'What the visitor wants to do' },
         name: { type: 'STRING', description: 'Visitor name as given' },
         email: { type: 'STRING', description: 'Visitor email as given' },
-        topic: { type: 'STRING', description: 'For send_info: what they want information about. For book_call: what the call is about.' },
+        topic: {
+          type: 'STRING',
+          description:
+            'Short context from the conversation: what the call or conversation is about, what to ' +
+            'send, or for the contributor register their sector and expertise.',
+        },
       },
       required: ['intent', 'name', 'email'],
     },
@@ -88,26 +125,17 @@ export const ACTION_TOOL = {
 
 export const TOOL_SUFFIX = `
 
-OUTPUT RULES
+WIRING
 
-- Reply in plain conversational text. No markdown, no HTML, no bullet lists unless asked.
-- Keep replies to a few sentences.
-- The page has already greeted the visitor in your voice: it introduced you as Vera and asked whether you may call them by their first name and what it is. Do not repeat that introduction. If their first message reads as a bare name or an answer to that question, thank them, use the name from then on, and invite their first question.
-- Action details are collected one per turn: ask for the full name, wait for the reply, then ask for the email, wait for the reply. If the visitor gives several details in one message, accept them all without re-asking.
-- Call the show_action_form tool only once the visitor has actually given both name and email. Never fill it with a guessed or example value.
-- Never claim to have submitted anything. The visitor presses the button themselves.`;
+- Reply in plain conversational text. No markdown syntax, no HTML.
+- The page has already delivered your A4 opening line before the visitor's first message. Do not introduce yourself again; pick the conversation up from their reply.
+- Call the show_action_form tool only once the visitor has actually given both name and email, per A8. Pass a short topic from the conversation so the follow-up is not cold.
+- After the tool call, the form is on their screen. They press the button; never claim anything was submitted.`;
 
 export const VOICE_SUFFIX = `
 
-VOICE RULES
+WIRING, VOICE
 
-- You are speaking aloud in a real-time conversation. Short sentences, natural rhythm, one thought at a time.
-- This is a conversation, not a presentation. Say one thing, then hand the turn back, and hand it back with a short question or invitation so the visitor always knows it is their turn. Never end your turn on a dead stop unless they are saying goodbye.
-- Open with a single short greeting: welcome them, ask whether you may call them by their first name and what it is, then wait. Do not describe MindLynx or the products until they ask something.
-- When they give you their name, thank them warmly and immediately ask how you can help, for example what they would like to know about MindLynx.
-- Ask before you explain. Prefer a short answer followed by a question over a long answer.
-- No lists, no headings, no formatting of any kind.
-- Action details are collected one per turn: ask for the full name, wait for the answer, then ask for the email, and wait again. Never ask for two details in one breath. If the visitor offers several details in one go, accept them all without re-asking.
-- Call the show_action_form tool only once the visitor has actually spoken both a name and an email. Never fill it with a guessed or example value; if the email is missing, ask for it.
-- After the tool call, tell them the form is on their screen and the button press is theirs to make.
-- Never claim to have submitted anything.`;
+- Part A12 governs everything you say aloud.
+- You open the session: one short greeting in the shape of A4, then wait.
+- Call the show_action_form tool only once the visitor has actually spoken both a name and an email, per A8. Then tell them the form is on their screen and the button press is theirs to make. Never claim anything was submitted.`;

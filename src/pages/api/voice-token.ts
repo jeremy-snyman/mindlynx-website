@@ -1,7 +1,7 @@
 export const prerender = false;
 
 import type { APIRoute } from 'astro';
-import { ACTION_TOOL, CONTEXT_PACK, VOICE_SUFFIX, clientIp, rateLimit } from '../../lib/companion';
+import { ACTION_TOOL, CONTEXT_PACK, SITE_SUFFIX, VOICE_SUFFIX, clientIp, rateLimit } from '../../lib/companion';
 
 const GEMINI_API_KEY = import.meta.env.GEMINI_API_KEY ?? '';
 const GEMINI_LIVE_MODEL = import.meta.env.GEMINI_LIVE_MODEL ?? 'gemini-3.1-flash-live-preview';
@@ -28,7 +28,7 @@ async function mintVoiceToken() {
         config: {
           responseModalities: ['AUDIO'],
           temperature: 0.3,
-          systemInstruction: CONTEXT_PACK + VOICE_SUFFIX,
+          systemInstruction: CONTEXT_PACK + SITE_SUFFIX + VOICE_SUFFIX,
           tools: [ACTION_TOOL],
           inputAudioTranscription: {},
           outputAudioTranscription: {},

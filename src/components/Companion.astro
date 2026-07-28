@@ -29,11 +29,11 @@
     </header>
     <div class="cmp-chat" id="cmp-chat" aria-live="polite" aria-label="Messages"></div>
     <div class="cmp-chips" id="cmp-chips">
-      <button class="cmp-chip" type="button">What is MindLynx?</button>
+      <button class="cmp-chip" type="button">What do you actually do?</button>
       <button class="cmp-chip" type="button">What is Helix?</button>
       <button class="cmp-chip" type="button">What is Albion?</button>
-      <button class="cmp-chip" type="button">What's coming next?</button>
-      <button class="cmp-chip" type="button">Book a call with the team</button>
+      <button class="cmp-chip" type="button">How does the consulting work?</button>
+      <button class="cmp-chip" type="button">Set up a scoping call</button>
     </div>
     <div class="cmp-input">
       <button class="cmp-mic" id="cmp-mic" type="button" title="Speak to Vera" aria-label="Speak to Vera" hidden>●</button>
@@ -360,7 +360,7 @@
     if (!opened) {
       opened = true;
       agentSay(
-        "Hello. I am <b>Vera</b>, MindLynx's front of house. Ask me what MindLynx builds, about Helix, Albion or Cortex, and I can send you information, put you on a waiting list, or set up a call with the team; the final button press is always yours. Before we begin: do you mind if I call you by your first name? What should I call you?"
+        "Hello, I'm <b>Vera</b>. I can tell you about what we build here, and whether it's likely to be any use to you. What brought you along?"
       );
     }
   }
@@ -444,11 +444,48 @@
   });
 
   /* ---- the action form: render-only, the human presses submit ---- */
-  const INTENT_COPY: Record<string, { title: string; go: string; interest: string; consent: boolean }> = {
-    helix_waitlist: { title: 'Your Helix waiting-list sign-up', go: 'Put me on the list', interest: 'helix', consent: true },
-    albion_waitlist: { title: 'Your Albion waiting-list sign-up', go: 'Put me on the list', interest: 'albion', consent: true },
-    send_info: { title: 'Your information request', go: 'Send me the information', interest: 'general', consent: false },
-    book_call: { title: 'Your call with the team', go: 'Request the call', interest: 'call', consent: false },
+  type IntentCopy = {
+    title: string;
+    go: string;
+    interest: string;
+    consent: boolean;
+    consentLabel?: string;
+    topicHint?: string;
+    calendly?: boolean;
+    messageLead: string;
+    thanks: string;
+  };
+  const INTENT_COPY: Record<string, IntentCopy> = {
+    helix_waitlist: {
+      title: 'Your Helix waiting-list sign-up', go: 'Put me on the list', interest: 'helix', consent: true,
+      messageLead: 'Helix waiting list, via Vera.', thanks: 'You will hear from us the moment there is news.',
+    },
+    albion_waitlist: {
+      title: 'Your Albion waitlist sign-up', go: 'Put me on the list', interest: 'albion', consent: true,
+      topicHint: 'Your sector (it shapes what gets built first)',
+      messageLead: 'Albion waitlist, via Vera.', thanks: 'You will hear from us the moment there is news.',
+    },
+    albion_contributor: {
+      title: 'Your contributor register entry', go: 'Add me to the register', interest: 'contributor', consent: true,
+      consentLabel: 'Contact me when my sector opens, with the terms in plain English. I can unsubscribe at any time',
+      topicHint: 'Your sector and expertise',
+      messageLead: 'Albion contributor register, via Vera.', thanks: 'When your sector opens, the terms come to you in plain English.',
+    },
+    scoping_call: {
+      title: 'Your scoping call', go: 'Request the call', interest: 'call', consent: false, calendly: true,
+      topicHint: 'What should we look at?',
+      messageLead: 'Scoping call request, via Vera.', thanks: 'The team will reply by email with times for the call.',
+    },
+    design_partner: {
+      title: 'Your design partner conversation', go: 'Start the conversation', interest: 'partner', consent: false,
+      topicHint: 'What would you like to shape?',
+      messageLead: 'Design partner conversation, via Vera.', thanks: 'The team will come back to you to set up the conversation.',
+    },
+    send_info: {
+      title: 'Your details for the team', go: 'Send it to the team', interest: 'general', consent: false,
+      topicHint: 'What is it about?',
+      messageLead: 'Follow-up request, via Vera.', thanks: 'Someone will come back to you properly.',
+    },
   };
 
   let lastForm: HTMLElement | null = null;
@@ -463,17 +500,16 @@
         oldGo.textContent = 'Replaced below';
       }
     }
-    const wantsTopic = intent === 'send_info' || intent === 'book_call';
-    const calendly = intent === 'book_call' && LIVE.calendly;
+    const calendly = copy.calendly && LIVE.calendly;
     let html = '<b>' + copy.title + '</b><div class="cmp-form">';
     html += '<input type="text" class="cmp-f-name" value="' + esc(lead.name) + '" placeholder="Name">';
     html += '<input type="email" class="cmp-f-email" value="' + esc(lead.email) + '" placeholder="Email">';
-    if (wantsTopic) {
-      html += '<input type="text" class="cmp-f-topic" value="' + esc(topic) + '" placeholder="' +
-        (intent === 'book_call' ? 'What is the call about?' : 'What should we send?') + '">';
+    if (copy.topicHint) {
+      html += '<input type="text" class="cmp-f-topic" value="' + esc(topic) + '" placeholder="' + esc(copy.topicHint) + '">';
     }
     if (copy.consent) {
-      html += '<label class="cmp-consent"><input type="checkbox" class="cmp-f-consent"> <span>Email me news and launch updates for this list. I can unsubscribe at any time (<a href="/privacy">privacy</a>).</span></label>';
+      const label = copy.consentLabel || 'Email me news and launch updates for this list. I can unsubscribe at any time';
+      html += '<label class="cmp-consent"><input type="checkbox" class="cmp-f-consent"> <span>' + label + ' (<a href="/privacy">privacy</a>).</span></label>';
     }
     if (calendly) {
       html += '<a class="cmp-cal" href="' + esc(LIVE.calendly) + '" target="_blank" rel="noopener noreferrer">Pick a time on the calendar</a>';
@@ -491,16 +527,11 @@
         return;
       }
       if (copy.consent && !(consentBox && consentBox.checked)) {
-        agentSay('The waiting list is an email list, so I need the consent box ticked before I can add you. The privacy notice is linked right there.');
+        agentSay("It's an email list, so I need the consent box ticked before I can add you. The privacy notice is linked right there on the form.");
         return;
       }
       const topicText = topicField ? topicField.value.trim() : '';
-      const message =
-        intent === 'book_call'
-          ? 'Call request via Vera.' + (topicText ? ' About: ' + topicText : '')
-          : intent === 'send_info'
-            ? 'Information request via Vera.' + (topicText ? ' About: ' + topicText : '')
-            : 'Joined via Vera, the site companion.';
+      const message = copy.messageLead + (topicText ? ' About: ' + topicText : '');
       const consented = !!(consentBox && consentBox.checked);
       fetch(FORM_ENDPOINT, {
         method: 'POST',
@@ -527,14 +558,7 @@
             interest: copy.interest,
             marketingOptIn: consented,
           });
-          agentSay(
-            '<b>' + esc(n.split(' ')[0]) + ', that is with the team.</b> ' +
-              (intent === 'book_call'
-                ? 'They will reply by email with times for the call.'
-                : intent === 'send_info'
-                  ? 'The information is on its way to your inbox.'
-                  : 'You will hear from us the moment there is news.')
-          );
+          agentSay('<b>' + esc(n.split(' ')[0]) + ", that's with the team.</b> " + copy.thanks);
         })
         .catch(() => {
           agentSay('That did not save. Give the button one more press, or use the contact form further down the page.');
@@ -726,7 +750,7 @@
     /* nudge Vera to open the conversation herself: one short greeting, then wait */
     try {
       live.session.sendClientContent({
-        turns: [{ role: 'user', parts: [{ text: '(The visitor has just connected by voice. Greet them in one short sentence, ask whether you may use their first name and what it is, then wait.)' }] }],
+        turns: [{ role: 'user', parts: [{ text: '(The visitor has just connected by voice. Greet them per A4: one short sentence, say who you are and ask what brought them along, then wait.)' }] }],
         turnComplete: true,
       });
     } catch {}
