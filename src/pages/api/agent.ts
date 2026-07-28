@@ -59,7 +59,13 @@ async function geminiParts(contents: unknown[]): Promise<any[]> {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', 'x-goog-api-key': GEMINI_API_KEY },
     body: JSON.stringify({
-      systemInstruction: { parts: [{ text: CONTEXT_PACK + SITE_SUFFIX + TOOL_SUFFIX }] },
+      systemInstruction: {
+        parts: [{
+          text:
+            CONTEXT_PACK + SITE_SUFFIX + TOOL_SUFFIX +
+            `\n\nToday is ${new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', timeZone: 'Europe/London' })}.`,
+        }],
+      },
       contents,
       generationConfig: { temperature: 0.3, maxOutputTokens: 2000 }, // the model thinks inside this budget; 500 left answers truncated
       tools: [ACTION_TOOL],
