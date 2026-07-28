@@ -54,9 +54,13 @@ const label = (iso: string) =>
 /** Bookable slots between from and to (Calendly caps a query at 7 days). */
 export async function getAvailability(from?: string, to?: string): Promise<Slot[]> {
   if (!TOKEN) throw new Error('calendly token not configured');
-  const start = from ? new Date(from) : new Date(Date.now() + 60 * 60_000);
+  // Models sometimes send "Monday 08:00" instead of an ISO date; an
+  // unparseable bound falls back to the default window rather than throwing.
+  const soonest = new Date(Date.now() + 60 * 60_000);
+  let start = from ? new Date(from) : soonest;
+  if (isNaN(start.getTime()) || start < soonest) start = soonest;
   let end = to ? new Date(to) : new Date(start.getTime() + 7 * 86_400_000);
-  if (end.getTime() - start.getTime() > 7 * 86_400_000) {
+  if (isNaN(end.getTime()) || end <= start || end.getTime() - start.getTime() > 7 * 86_400_000) {
     end = new Date(start.getTime() + 7 * 86_400_000);
   }
   const key = `${start.toISOString().slice(0, 13)}:${end.toISOString().slice(0, 13)}`;

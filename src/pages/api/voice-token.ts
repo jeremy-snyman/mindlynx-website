@@ -33,7 +33,9 @@ export const POST: APIRoute = async ({ request, clientAddress }) => {
 
   const payload = Buffer.from(
     JSON.stringify({
-      instructions: CONTEXT_PACK + SITE_SUFFIX + VOICE_SUFFIX,
+      instructions:
+        CONTEXT_PACK + SITE_SUFFIX + VOICE_SUFFIX +
+        `\n\nToday is ${new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', timeZone: 'Europe/London' })}.`,
       voiceId: VERA_VOICE_ID,
       voiceSpeed: VERA_VOICE_SPEED,
       // Where the voice service reads scoping-call slots from (public, no secrets).

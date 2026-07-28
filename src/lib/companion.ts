@@ -139,9 +139,11 @@ export const ACTION_TOOL = {
       properties: {
         from: {
           type: 'STRING',
-          description: 'ISO date lower bound, e.g. 2026-08-03 for "next Monday". Omit for the coming week.',
+          description:
+            'ISO date lower bound, strictly YYYY-MM-DD, computed from today\'s date (e.g. "next Monday" ' +
+            'means the following Monday\'s actual date). Omit for the coming week. Never a weekday name.',
         },
-        to: { type: 'STRING', description: 'ISO upper bound, at most 7 days after from.' },
+        to: { type: 'STRING', description: 'ISO date upper bound, strictly YYYY-MM-DD, at most 7 days after from.' },
       },
       required: [],
     },

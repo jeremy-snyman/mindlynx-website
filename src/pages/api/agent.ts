@@ -169,8 +169,12 @@ async function claudeCreate(messages: any[]): Promise<any> {
       // No temperature: Opus 5 thinks by default and rejects one. Determinism
       // here comes from the pack, not the sampler.
       max_tokens: 2048,
-      // The pack is static: caching it keeps Opus pricing sane per turn.
-      system: [{ type: 'text', text: CONTEXT_PACK + SITE_SUFFIX + TOOL_SUFFIX, cache_control: { type: 'ephemeral' } }],
+      // The pack is static and cached; the date rides in its own uncached block
+      // so "next Monday" can become a real ISO date without breaking the cache.
+      system: [
+        { type: 'text', text: CONTEXT_PACK + SITE_SUFFIX + TOOL_SUFFIX, cache_control: { type: 'ephemeral' } },
+        { type: 'text', text: `Today is ${new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', timeZone: 'Europe/London' })}.` },
+      ],
       tools: CLAUDE_TOOLS,
       messages,
     }),
@@ -184,7 +188,8 @@ async function callClaude(message: string, history: unknown) {
   const messages = toClaudeMessages(message, history);
   let data = await claudeCreate(messages);
   let toolUse = (data.content ?? []).find((b: any) => b.type === 'tool_use');
-  if (toolUse?.name === 'check_availability') {
+  // The model may correct its window and look again; give it a few rounds.
+  for (let round = 0; round < 3 && toolUse?.name === 'check_availability'; round++) {
     const response = await availabilityResult(toolUse.input);
     messages.push({ role: 'assistant', content: data.content });
     messages.push({
