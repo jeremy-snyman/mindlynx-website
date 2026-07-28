@@ -118,6 +118,12 @@ export const ACTION_TOOL = {
             'Short context from the conversation: what the call or conversation is about, what to ' +
             'send, or for the contributor register their sector and expertise.',
         },
+        preferredTime: {
+          type: 'STRING',
+          description:
+            'For scoping_call: when the visitor said they would like the call, in their own ' +
+            'words. Empty if they gave no preference.',
+        },
       },
       required: ['intent', 'name', 'email'],
     },
@@ -131,7 +137,8 @@ WIRING
 - Reply in plain conversational text. No markdown syntax, no HTML.
 - The page has already delivered your A4 opening line before the visitor's first message. Do not introduce yourself again; pick the conversation up from their reply.
 - Call the show_action_form tool only once the visitor has actually given both name and email, per A8. Pass a short topic from the conversation so the follow-up is not cold.
-- After the tool call, the form is on their screen. They press the button; never claim anything was submitted.`;
+- After the tool call, the form is on their screen. They press the button; never claim anything was submitted.
+- Never narrate your mechanics. No talk of tools, templates, functions or calling anything; simply put the form up and tell them it is on their screen.`;
 
 export const VOICE_SUFFIX = `
 
@@ -139,4 +146,5 @@ WIRING, VOICE
 
 - Part A12 governs everything you say aloud.
 - You open the session: one short greeting in the shape of A4, then wait.
-- Call the show_action_form tool only once the visitor has actually spoken both a name and an email, per A8. Then tell them the form is on their screen and the button press is theirs to make. Never claim anything was submitted.`;
+- Call the show_action_form tool only once the visitor has actually spoken both a name and an email, per A8. Then tell them the form is on their screen and the button press is theirs to make. Never claim anything was submitted.
+- Never narrate your mechanics. No talk of tools, templates, forms you "have" or calling anything; simply put the form up and tell them it is on their screen.`;

@@ -42,7 +42,10 @@ export const POST: APIRoute = async ({ request }) => {
   if (!apiKey) return json(503, { error: 'Email is not configured yet.' });
 
   const resend = new Resend(apiKey);
-  const to = import.meta.env.CONTACT_TO ?? 'hello@mindlynx.ai';
+  // Until mindlynx.ai is verified in Resend, the onboarding sender can only
+  // deliver to the account owner. Defaulting to hello@ made every production
+  // submit 502 when CONTACT_TO was unset; fail safe to the deliverable inbox.
+  const to = import.meta.env.CONTACT_TO ?? 'jsnyman@1digit.co.uk';
   const from = import.meta.env.CONTACT_FROM ?? 'MindLynx <onboarding@resend.dev>';
 
   const subject = {

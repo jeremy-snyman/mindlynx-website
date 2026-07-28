@@ -425,7 +425,7 @@
         if (d.action && d.action.type === 'show_action_form') {
           lead.name = d.action.name || '';
           lead.email = d.action.email || '';
-          setTimeout(() => showActionForm(d.action.intent, d.action.topic || ''), 600);
+          setTimeout(() => showActionForm(d.action.intent, d.action.topic || '', d.action.preferredTime || ''), 600);
         }
       })
       .catch(() => {
@@ -451,6 +451,7 @@
     consent: boolean;
     consentLabel?: string;
     topicHint?: string;
+    timeHint?: string;
     calendly?: boolean;
     messageLead: string;
     thanks: string;
@@ -473,7 +474,7 @@
     },
     scoping_call: {
       title: 'Your scoping call', go: 'Request the call', interest: 'call', consent: false, calendly: true,
-      topicHint: 'What should we look at?',
+      topicHint: 'What should we look at?', timeHint: 'When would suit? (e.g. Thursday afternoon)',
       messageLead: 'Scoping call request, via Vera.', thanks: 'The team will reply by email with times for the call.',
     },
     design_partner: {
@@ -489,7 +490,7 @@
   };
 
   let lastForm: HTMLElement | null = null;
-  function showActionForm(intent: string, topic: string) {
+  function showActionForm(intent: string, topic: string, preferredTime = '') {
     const copy = INTENT_COPY[intent] || INTENT_COPY.send_info;
     /* never pre-fill fabricated values: a placeholder-looking email renders blank */
     if (/example|placeholder|test@|@test\.|your.?email|@email\./i.test(lead.email)) lead.email = '';
@@ -506,6 +507,9 @@
     html += '<input type="email" class="cmp-f-email" value="' + esc(lead.email) + '" placeholder="Email">';
     if (copy.topicHint) {
       html += '<input type="text" class="cmp-f-topic" value="' + esc(topic) + '" placeholder="' + esc(copy.topicHint) + '">';
+    }
+    if (copy.timeHint) {
+      html += '<input type="text" class="cmp-f-time" value="' + esc(preferredTime) + '" placeholder="' + esc(copy.timeHint) + '">';
     }
     if (copy.consent) {
       const label = copy.consentLabel || 'Email me news and launch updates for this list. I can unsubscribe at any time';
@@ -531,7 +535,12 @@
         return;
       }
       const topicText = topicField ? topicField.value.trim() : '';
-      const message = copy.messageLead + (topicText ? ' About: ' + topicText : '');
+      const timeField = bubble.querySelector<HTMLInputElement>('.cmp-f-time');
+      const timeText = timeField ? timeField.value.trim() : '';
+      const message =
+        copy.messageLead +
+        (topicText ? ' About: ' + topicText + '.' : '') +
+        (timeText ? ' Preferred time: ' + timeText + '.' : '');
       const consented = !!(consentBox && consentBox.checked);
       fetch(FORM_ENDPOINT, {
         method: 'POST',
@@ -703,7 +712,7 @@
           if (!data || data.type !== 'show_action_form') return;
           lead.name = data.name || '';
           lead.email = data.email || '';
-          showActionForm(data.intent || 'send_info', data.topic || '');
+          showActionForm(data.intent || 'send_info', data.topic || '', data.preferredTime || '');
         },
         onDisconnected: () => {
           if (live.client) stopLive('Voice session ended. Press Voice to reconnect, or just type.');

@@ -14,6 +14,8 @@ const VOICE_CONNECT_URL =
 // Lucy: British female, Jeremy's pick (Gemma 62ae83ad-4f6a-430b-af41-a9bede9286ca
 // was the runner-up; Victoria is the in-product Helix voice).
 const VERA_VOICE_ID = import.meta.env.VERA_VOICE_ID ?? '2f251ac3-89a9-4a77-a452-704b474ccd01';
+// Cartesia speed multiplier; 1.0 is the voice's natural pace, Jeremy wanted brisker.
+const VERA_VOICE_SPEED = Number(import.meta.env.VERA_VOICE_SPEED ?? '1.15');
 
 const json = (status: number, body: object, headers: Record<string, string> = {}) =>
   new Response(JSON.stringify(body), {
@@ -33,6 +35,7 @@ export const POST: APIRoute = async ({ request, clientAddress }) => {
     JSON.stringify({
       instructions: CONTEXT_PACK + SITE_SUFFIX + VOICE_SUFFIX,
       voiceId: VERA_VOICE_ID,
+      voiceSpeed: VERA_VOICE_SPEED,
       site: 'mindlynx.ai',
       keyterms: ['MindLynx', 'Helix', 'Albion', 'Cortex', 'Tachyon', 'Pulse', 'Vera'],
       exp: Math.floor(Date.now() / 1000) + 120,
