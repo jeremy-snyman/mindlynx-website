@@ -65,19 +65,28 @@ export const POST: APIRoute = async ({ request }) => {
        at ${esc(consentedAt || new Date().toISOString())} on ${esc(pageUrl || 'mindlynx.ai')}.</p>`
     : '';
 
-  const { error } = await resend.emails.send({
-    from,
-    to,
-    replyTo: email,
-    subject,
-    html: `
+  const html = `
       <p><strong>${esc(name)}</strong> &lt;${esc(email)}&gt;</p>
       <p>About: ${{ albion: 'Albion waitlist', helix: 'Helix waitlist', partner: 'Partnering on a product', call: 'A call with the team', contributor: 'The Albion contributor register', general: 'General enquiry' }[interest]}</p>
       ${message ? `<p>${esc(message).replace(/\n/g, '<br>')}</p>` : '<p><em>No message.</em></p>'}
       ${source ? `<p style="color:#666;font-size:12px">Source: ${esc(source)}</p>` : ''}
       ${consentRecord}
-    `,
-  });
+    `;
+  let { error } = await resend.emails.send({ from, to, replyTo: email, subject, html });
+  if (error) {
+    // Until mindlynx.ai is verified in Resend, any env pointing from/to at
+    // that domain makes every send fail. A visitor's message must never be
+    // dropped over configuration: retry once with the pair Resend always
+    // accepts for this account.
+    console.warn('[contact] send failed via configured from/to, retrying with safe pair:', error?.message);
+    ({ error } = await resend.emails.send({
+      from: 'MindLynx <onboarding@resend.dev>',
+      to: 'jsnyman@1digit.co.uk',
+      replyTo: email,
+      subject,
+      html,
+    }));
+  }
   if (error) return json(502, { error: 'Could not send message.' });
 
   // Waitlist signups join the Resend audience only with explicit consent;
