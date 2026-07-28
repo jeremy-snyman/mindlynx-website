@@ -11,8 +11,9 @@ import { CONTEXT_PACK, SITE_SUFFIX, VOICE_SUFFIX, clientIp, rateLimit } from '..
 const VOICE_OFFER_SECRET = import.meta.env.VOICE_OFFER_SECRET ?? '';
 const VOICE_CONNECT_URL =
   import.meta.env.VOICE_CONNECT_URL ?? 'https://app.helix.work/pipecat/api/offer';
-// Gemma: British female, distinct from Victoria (the in-product Helix voice).
-const VERA_VOICE_ID = import.meta.env.VERA_VOICE_ID ?? '62ae83ad-4f6a-430b-af41-a9bede9286ca';
+// Lucy: British female, Jeremy's pick (Gemma 62ae83ad-4f6a-430b-af41-a9bede9286ca
+// was the runner-up; Victoria is the in-product Helix voice).
+const VERA_VOICE_ID = import.meta.env.VERA_VOICE_ID ?? '2f251ac3-89a9-4a77-a452-704b474ccd01';
 
 const json = (status: number, body: object, headers: Record<string, string> = {}) =>
   new Response(JSON.stringify(body), {
