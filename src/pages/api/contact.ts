@@ -23,12 +23,13 @@ export const POST: APIRoute = async ({ request }) => {
   const name = String(data.name ?? '').trim().slice(0, 200);
   const email = String(data.email ?? '').trim().slice(0, 254);
   const message = String(data.message ?? '').trim().slice(0, 5000);
-  const interest = ['albion', 'partner'].includes(String(data.interest))
+  const interest = ['albion', 'helix', 'partner', 'call'].includes(String(data.interest))
     ? String(data.interest)
     : 'general';
   const consented = data.consent === 'yes';
   const consentedAt = String(data.consentedAt ?? '').slice(0, 40);
   const pageUrl = String(data.pageUrl ?? '').slice(0, 300);
+  const source = String(data.source ?? '').slice(0, 100);
 
   // Honeypot: bots fill the hidden "company" field, so pretend success.
   if (String(data.company ?? '').trim() !== '') return json(200, { ok: true });
@@ -46,15 +47,17 @@ export const POST: APIRoute = async ({ request }) => {
 
   const subject = {
     albion: `Albion waitlist · ${name}`,
+    helix: `Helix waitlist · ${name}`,
     partner: `Partnership · ${name}`,
+    call: `Call request · ${name}`,
     general: `MindLynx enquiry · ${name}`,
   }[interest]!;
 
-  // UK GDPR consent record for the Albion marketing list. Kept in the
+  // UK GDPR consent record for the waitlist marketing lists. Kept in the
   // notification email so there is a durable, timestamped trail.
   const consentRecord = consented
-    ? `<p style="color:#666;font-size:12px">Consent record: opted in to Albion news via the
-       checkbox "Email me Albion news and launch updates. I can unsubscribe at any time."
+    ? `<p style="color:#666;font-size:12px">Consent record: opted in to ${esc(interest)} list
+       updates via an explicit unticked-by-default checkbox
        at ${esc(consentedAt || new Date().toISOString())} on ${esc(pageUrl || 'mindlynx.ai')}.</p>`
     : '';
 
@@ -65,8 +68,9 @@ export const POST: APIRoute = async ({ request }) => {
     subject,
     html: `
       <p><strong>${esc(name)}</strong> &lt;${esc(email)}&gt;</p>
-      <p>About: ${{ albion: 'Albion waitlist', partner: 'Partnering on a product', general: 'General enquiry' }[interest]}</p>
+      <p>About: ${{ albion: 'Albion waitlist', helix: 'Helix waitlist', partner: 'Partnering on a product', call: 'A call with the team', general: 'General enquiry' }[interest]}</p>
       ${message ? `<p>${esc(message).replace(/\n/g, '<br>')}</p>` : '<p><em>No message.</em></p>'}
+      ${source ? `<p style="color:#666;font-size:12px">Source: ${esc(source)}</p>` : ''}
       ${consentRecord}
     `,
   });

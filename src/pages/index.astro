@@ -3,6 +3,7 @@ import '@fontsource-variable/source-serif-4';
 import '@fontsource-variable/inter';
 import '../styles/global.css';
 import CookieNotice from '../components/CookieNotice.astro';
+import Companion from '../components/Companion.astro';
 
 const title = 'MindLynx · Intelligence that gives something back';
 const description =
@@ -308,6 +309,7 @@ const description =
                 <label for="interest">I'm writing about</label>
                 <select id="interest" name="interest">
                   <option value="general">A general enquiry</option>
+                  <option value="helix">The Helix waitlist</option>
                   <option value="albion">The Albion waitlist</option>
                   <option value="partner">Partnering on a product</option>
                 </select>
@@ -320,7 +322,7 @@ const description =
                 <label class="consent-label">
                   <input id="consent" name="consent" type="checkbox" value="yes" />
                   <span>
-                    Email me Albion news and launch updates. I can unsubscribe at any time.
+                    Email me news and launch updates for this list. I can unsubscribe at any time.
                   </span>
                 </label>
               </div>
@@ -354,6 +356,7 @@ const description =
     </footer>
 
     <CookieNotice />
+    <Companion />
 
     <script>
       const header = document.querySelector('.site-header')!;
@@ -397,7 +400,7 @@ const description =
       const consentField = document.querySelector<HTMLElement>('.consent-field')!;
       const consentBox = document.querySelector<HTMLInputElement>('#consent')!;
       const syncConsent = () => {
-        consentField.hidden = interestSelect.value !== 'albion';
+        consentField.hidden = !['albion', 'helix'].includes(interestSelect.value);
         if (consentField.hidden) consentBox.checked = false;
       };
       interestSelect.addEventListener('change', syncConsent);
@@ -415,7 +418,7 @@ const description =
         event.preventDefault();
         status.classList.remove('is-error');
         if (!form.reportValidity()) return;
-        if (interestSelect.value === 'albion' && !consentBox.checked) {
+        if (['albion', 'helix'].includes(interestSelect.value) && !consentBox.checked) {
           status.textContent = 'The waitlist is an email list, so please tick the box to join it.';
           status.classList.add('is-error');
           consentBox.focus();

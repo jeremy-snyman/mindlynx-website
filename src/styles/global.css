@@ -212,7 +212,8 @@ button, a { -webkit-tap-highlight-color: transparent; }
 .scroll-cue {
   position: absolute;
   z-index: 2;
-  right: max(24px, calc((100vw - 1180px) / 2));
+  /* 108px clears the fixed companion launcher (24px inset + 60px circle + gap). */
+  right: max(108px, calc((100vw - 1180px) / 2));
   bottom: 31px;
   display: flex;
   align-items: center;
