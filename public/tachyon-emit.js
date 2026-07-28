@@ -35,8 +35,10 @@
 
   var CONFIG = {
     // Base ingress URL; per-event endpoints are derived as `${endpointBase}/${eventName}`.
-    endpointBase:      'https://tachyon-dev.seillen.com/tachyon',
-    endpoint:          'https://tachyon-dev.seillen.com/tachyon/PageLoaded',
+    // Same-origin proxy (src/pages/api/tachyon/[event].ts) forwards to the
+    // ingress server-side, keeping third-party domains out of the client.
+    endpointBase:      '/api/tachyon',
+    endpoint:          '/api/tachyon/PageLoaded',
     pipeline:          'Website',
     source:            'Vivid',
     brand:             'MindLynx',

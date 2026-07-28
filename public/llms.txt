@@ -6,6 +6,7 @@
 
 - [Helix](https://helix.work): an operating system for work, built for AI agents and humans working side by side. Work moves safely and autonomously, governed from the first action.
 - [Albion](https://albion.helix.work): a family of open-source models that keep reasoning sovereign, independent of the frontier labs, at a fraction of the usual cost.
+- Strategic Consulting: one painful process, made to run itself in about four weeks, with receipts for what ran, why and what it cost. Fixed price, charged on outcome: half on signature, the balance when the agreed result is running.
 
 ## Coming next
 
@@ -25,4 +26,4 @@ Some MindLynx clients become founders of their own products, with MindLynx as a 
 ## Contact
 
 - Email: hello@mindlynx.ai
-- Contact form: https://mindlynx.ai/#talk (general enquiries, the Albion waitlist, product partnerships)
+- Contact form: https://mindlynx.ai/#talk (general enquiries, scoping calls, the Helix and Albion waitlists, product partnerships)

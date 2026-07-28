@@ -85,7 +85,9 @@ async function check(label, src) {
   const { version, base } = parseConfig(src);
   let allOk = true;
   for (const eventName of EVENTS) {
-    const url = `${base}/${eventName}`;
+    // A relative base means the emitter posts through the site's own proxy;
+    // resolve it against the live origin so the check exercises the same path.
+    const url = base.startsWith('/') ? `${SITE}${base}/${eventName}` : `${base}/${eventName}`;
     let res, body;
     try {
       res = await fetch(url, {
