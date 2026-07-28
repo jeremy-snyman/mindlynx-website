@@ -5,6 +5,7 @@ import { ACTION_TOOL, CONTEXT_PACK, SITE_SUFFIX, VOICE_SUFFIX, clientIp, rateLim
 
 const GEMINI_API_KEY = import.meta.env.GEMINI_API_KEY ?? '';
 const GEMINI_LIVE_MODEL = import.meta.env.GEMINI_LIVE_MODEL ?? 'gemini-3.1-flash-live-preview';
+const GEMINI_VOICE = import.meta.env.GEMINI_VOICE ?? 'Aoede';
 
 const json = (status: number, body: object, headers: Record<string, string> = {}) =>
   new Response(JSON.stringify(body), {
@@ -28,6 +29,9 @@ async function mintVoiceToken() {
         config: {
           responseModalities: ['AUDIO'],
           temperature: 0.3,
+          // Pin the voice. Without speechConfig the Live API may pick a
+          // fresh voice per response, so Vera changed voice mid-conversation.
+          speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: GEMINI_VOICE } } },
           systemInstruction: CONTEXT_PACK + SITE_SUFFIX + VOICE_SUFFIX,
           tools: [ACTION_TOOL],
           inputAudioTranscription: {},
