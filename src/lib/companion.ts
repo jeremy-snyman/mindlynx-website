@@ -31,6 +31,7 @@ const LIMITS = {
   chat: { max: 20, windowMs: 60_000 },
   voice: { max: 5, windowMs: 600_000 },
   emit: { max: 60, windowMs: 60_000 },
+  book: { max: 3, windowMs: 600_000 },
 } as const;
 const hits = new Map<string, number[]>();
 setInterval(() => {
@@ -123,6 +124,12 @@ export const ACTION_TOOL = {
           description:
             'For scoping_call: when the visitor said they would like the call, in their own ' +
             'words. Empty if they gave no preference.',
+        },
+        preferredDate: {
+          type: 'STRING',
+          description:
+            'For scoping_call: the day the visitor wants, strictly YYYY-MM-DD computed from ' +
+            "today's date. The on-screen slot choices start from this day. Empty if no preference.",
         },
       },
       required: ['intent', 'name', 'email'],

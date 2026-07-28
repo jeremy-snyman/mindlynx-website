@@ -437,7 +437,7 @@
         if (d.action && d.action.type === 'show_action_form') {
           lead.name = d.action.name || '';
           lead.email = d.action.email || '';
-          setTimeout(() => showActionForm(d.action.intent, d.action.topic || '', d.action.preferredTime || ''), 600);
+          setTimeout(() => showActionForm(d.action.intent, d.action.topic || '', d.action.preferredTime || '', d.action.preferredDate || ''), 600);
         }
       })
       .catch(() => {
@@ -502,7 +502,7 @@
   };
 
   let lastForm: HTMLElement | null = null;
-  function showActionForm(intent: string, topic: string, preferredTime = '') {
+  function showActionForm(intent: string, topic: string, preferredTime = '', preferredDate = '') {
     const copy = INTENT_COPY[intent] || INTENT_COPY.send_info;
     /* never pre-fill fabricated values: a placeholder-looking email renders blank */
     if (/example|placeholder|test@|@test\.|your.?email|@email\./i.test(lead.email)) lead.email = '';
@@ -533,28 +533,34 @@
     html += '<button class="cmp-go" type="button">' + copy.go + '</button></div>';
     const bubble = el(html, 'agent');
     lastForm = bubble;
+    let chosenSlot: { start: string; label: string } | null = null;
     if (intent === 'scoping_call') {
-      // Real bookable times as tap-to-pick chips; choosing one also retargets the
-      // calendar button at that exact slot so booking is a single confirm click.
-      fetch('/api/availability')
+      // Real bookable times as tap-to-pick chips, anchored on the day the
+      // conversation agreed. Choosing one turns the button into a direct
+      // booking: the visitor stays on this site, the diary entry is made here.
+      const query = preferredDate ? '?from=' + encodeURIComponent(preferredDate) : '';
+      fetch('/api/availability' + query)
         .then((r) => (r.ok ? r.json() : null))
         .then((av) => {
           if (!av || !av.ok || !av.slots || !av.slots.length) return;
           const timeField = bubble.querySelector<HTMLInputElement>('.cmp-f-time');
-          if (!timeField) return;
+          const go = bubble.querySelector<HTMLButtonElement>('.cmp-go');
+          if (!timeField || !go) return;
+          // Direct booking replaces the trip to Calendly.
+          bubble.querySelector('.cmp-cal')?.remove();
           const wrap = document.createElement('div');
           wrap.className = 'cmp-slots';
-          av.slots.slice(0, 6).forEach((s: { label: string; schedulingUrl: string }) => {
+          av.slots.slice(0, 6).forEach((s: { start: string; label: string }) => {
             const b = document.createElement('button');
             b.type = 'button';
             b.className = 'cmp-slot';
             b.textContent = s.label;
             b.addEventListener('click', () => {
+              chosenSlot = s;
               timeField.value = s.label;
               wrap.querySelectorAll('.cmp-slot').forEach((x) => x.classList.remove('sel'));
               b.classList.add('sel');
-              const cal = bubble.querySelector<HTMLAnchorElement>('.cmp-cal');
-              if (cal) cal.href = s.schedulingUrl;
+              go.textContent = 'Book ' + s.label;
             });
             wrap.appendChild(b);
           });
@@ -578,27 +584,23 @@
       const topicText = topicField ? topicField.value.trim() : '';
       const timeField = bubble.querySelector<HTMLInputElement>('.cmp-f-time');
       const timeText = timeField ? timeField.value.trim() : '';
-      const message =
-        copy.messageLead +
-        (topicText ? ' About: ' + topicText + '.' : '') +
-        (timeText ? ' Preferred time: ' + timeText + '.' : '');
       const consented = !!(consentBox && consentBox.checked);
-      fetch(FORM_ENDPOINT, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name: n,
-          email: e,
-          interest: copy.interest,
-          message,
-          consent: consented ? 'yes' : '',
-          consentedAt: consented ? new Date().toISOString() : '',
-          pageUrl: location.href,
-          source: 'mindlynx.ai/companion',
-          company: '',
-        }),
-      })
-        .then((r) => {
+      const submitContact = (message: string, thanks: string) =>
+        fetch(FORM_ENDPOINT, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            name: n,
+            email: e,
+            interest: copy.interest,
+            message,
+            consent: consented ? 'yes' : '',
+            consentedAt: consented ? new Date().toISOString() : '',
+            pageUrl: location.href,
+            source: 'mindlynx.ai/companion',
+            company: '',
+          }),
+        }).then((r) => {
           if (!r.ok) throw 0;
           const go = bubble.querySelector<HTMLButtonElement>('.cmp-go')!;
           go.disabled = true;
@@ -608,8 +610,33 @@
             interest: copy.interest,
             marketingOptIn: consented,
           });
-          agentSay('<b>' + esc(n.split(' ')[0]) + ", that's with the team.</b> " + copy.thanks);
-        })
+          agentSay('<b>' + esc(n.split(' ')[0]) + ', ' + thanks + '</b>');
+        });
+      const baseMessage =
+        copy.messageLead +
+        (topicText ? ' About: ' + topicText + '.' : '') +
+        (timeText ? ' Preferred time: ' + timeText + '.' : '');
+      const submission = chosenSlot
+        ? // The human picked a real slot: book it here, on this site, and let
+          // the notification email carry the fact rather than a preference.
+          fetch('/api/book', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ start: chosenSlot.start, name: n, email: e }),
+          }).then((r) => {
+            if (r.ok) {
+              return submitContact(
+                copy.messageLead + (topicText ? ' About: ' + topicText + '.' : '') + ' BOOKED: ' + chosenSlot!.label + '.',
+                "that's booked for " + esc(chosenSlot!.label) + '. The calendar invite is on its way to your inbox.'
+              );
+            }
+            // Booking refused (slot just taken, or the diary is unreachable):
+            // fall back to the request-by-email path so nothing is lost.
+            chosenSlot = null;
+            return submitContact(baseMessage, "that's with the team. " + copy.thanks);
+          })
+        : submitContact(baseMessage, "that's with the team. " + copy.thanks);
+      submission
         .catch(() => {
           agentSay('That did not save. Give the button one more press, or use the contact form further down the page.');
         });
@@ -669,6 +696,9 @@
     finaliseUser();
     finaliseBot();
     if (live.client) { const c = live.client; live.client = null; try { c.disconnect(); } catch {} }
+    // A left Daily call instance refuses the next join: reconnecting after the
+    // five-minute cap failed until the instance is destroyed and made fresh.
+    if (live.call) { const dc = live.call; live.call = null; setTimeout(() => { try { dc.destroy(); } catch {} }, 500); }
     if (live.audioEl) { try { live.audioEl.pause(); } catch {} live.audioEl = null; }
     mic.classList.remove('rec');
     refreshVoiceUi();
@@ -697,6 +727,7 @@
        deaf with no visible error. (Ported from helix-ui, which hit exactly that.) */
     const Daily = dj.default;
     const call = Daily.getCallInstance() ?? Daily.createCallObject();
+    live.call = call;
     const originalLoad = call.load.bind(call);
     (call as any).load = (props?: Record<string, unknown>) =>
       originalLoad({
@@ -753,7 +784,7 @@
           if (!data || data.type !== 'show_action_form') return;
           lead.name = data.name || '';
           lead.email = data.email || '';
-          showActionForm(data.intent || 'send_info', data.topic || '', data.preferredTime || '');
+          showActionForm(data.intent || 'send_info', data.topic || '', data.preferredTime || '', data.preferredDate || '');
         },
         onDisconnected: () => {
           if (live.client) stopLive('Voice session ended. Press Voice to reconnect, or just type.');

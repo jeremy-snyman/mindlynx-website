@@ -117,6 +117,7 @@ async function callGemini(message: string, history: unknown) {
       email: clean(args.email, 254).toLowerCase(),
       topic: clean(args.topic, 300),
       preferredTime: clean(args.preferredTime, 120),
+      preferredDate: clean(args.preferredDate, 10),
     };
     reply ||= 'Here is your form, pre-filled. Check the details, then press the button. The button press is yours to make, not mine.';
   }
@@ -221,6 +222,7 @@ async function callClaude(message: string, history: unknown) {
       email: clean(args.email, 254).toLowerCase(),
       topic: clean(args.topic, 300),
       preferredTime: clean(args.preferredTime, 120),
+      preferredDate: clean(args.preferredDate, 10),
     };
     reply ||= 'Here is your form, pre-filled. Check the details, then press the button. The button press is yours to make, not mine.';
   }

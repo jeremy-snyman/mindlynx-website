@@ -51,6 +51,27 @@ const label = (iso: string) =>
     timeZone: 'Europe/London',
   });
 
+/** Book a slot directly via the Calendly API: the visitor never leaves the site.
+    Requires the event type's location to be API-bookable (custom text, not an
+    auto-generated conference link). */
+export async function bookSlot(start: string, name: string, email: string) {
+  if (!TOKEN) throw new Error('calendly token not configured');
+  const uri = await resolveEventType();
+  const res = await fetch('https://api.calendly.com/invitees', {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${TOKEN}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      event_type: uri,
+      start_time: start,
+      invitee: { name, email, timezone: 'Europe/London' },
+    }),
+    signal: AbortSignal.timeout(10_000),
+  });
+  if (!res.ok) throw new Error(`calendly book ${res.status}: ${(await res.text()).slice(0, 200)}`);
+  cache = null; // the slot just left the diary
+  return res.json();
+}
+
 /** Bookable slots between from and to (Calendly caps a query at 7 days). */
 export async function getAvailability(from?: string, to?: string): Promise<Slot[]> {
   if (!TOKEN) throw new Error('calendly token not configured');
