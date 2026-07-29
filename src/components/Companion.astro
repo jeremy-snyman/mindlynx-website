@@ -303,7 +303,7 @@
   .cmp-cal-next:hover:not(:disabled) { border-color: var(--warm); color: var(--cream); }
   .cmp-cal-prev:disabled,
   .cmp-cal-next:disabled { opacity: 0.35; cursor: default; }
-  .cmp-slots { display: flex; flex-wrap: wrap; gap: 6px; max-height: 140px; overflow-y: auto; }
+  .cmp-slots { position: relative; display: flex; flex-wrap: wrap; gap: 6px; max-height: 140px; overflow-y: auto; }
   .cmp-slot {
     font-family: var(--sans);
     font-size: 0.76rem;
@@ -528,12 +528,32 @@
     timeField: HTMLInputElement,
     go: HTMLButtonElement,
     preferredDate: string,
+    preferredTime: string,
     onPick: (s: { start: string; label: string }) => void
   ) {
     const dayKey = (iso: string) =>
       new Date(iso).toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', timeZone: 'Europe/London' });
     const timeLabel = (iso: string) =>
       new Date(iso).toLocaleTimeString('en-GB', { hour: 'numeric', minute: '2-digit', hour12: true, timeZone: 'Europe/London' });
+    const slotMinutes = (iso: string) => {
+      const [h, m] = new Intl.DateTimeFormat('en-GB', { hour: 'numeric', minute: 'numeric', hour12: false, timeZone: 'Europe/London' })
+        .format(new Date(iso))
+        .split(':');
+      return parseInt(h, 10) * 60 + parseInt(m, 10);
+    };
+    /* The agreed time, as minutes-of-day, out of whatever wording the model
+       passed ("2:00 pm", "Monday 3 August at 2pm", "14:30"). Null if none. */
+    const wantedMinutes = (() => {
+      const ampm = preferredTime.match(/(\d{1,2})(?:[:.](\d{2}))?\s*(am|pm)/i);
+      if (ampm) {
+        let h = parseInt(ampm[1], 10) % 12;
+        if (ampm[3].toLowerCase() === 'pm') h += 12;
+        return h * 60 + (ampm[2] ? parseInt(ampm[2], 10) : 0);
+      }
+      const h24 = preferredTime.match(/\b(\d{1,2})[:.](\d{2})\b/);
+      if (h24) return parseInt(h24[1], 10) * 60 + parseInt(h24[2], 10);
+      return null;
+    })();
 
     const days: { key: string; slots: { start: string; label: string }[] }[] = [];
     let idx = 0;
@@ -595,14 +615,22 @@
         b.className = 'cmp-slot' + (s.start === chosenStart ? ' sel' : '');
         b.textContent = timeLabel(s.start);
         b.addEventListener('click', () => {
-          chosenStart = s.start;
-          timeField.value = s.label;
-          go.textContent = 'Book ' + s.label;
-          onPick(s);
+          select(s);
           render();
         });
         slotsBox.appendChild(b);
       });
+      /* The chosen time stays in view, centred, even when the day has more
+         slots than the box shows. Manual maths rather than scrollIntoView so
+         the chat's own scroll position is never disturbed. */
+      const sel = slotsBox.querySelector<HTMLElement>('.sel');
+      if (sel) slotsBox.scrollTop = sel.offsetTop - slotsBox.clientHeight / 2 + sel.clientHeight / 2;
+    };
+    const select = (s: { start: string; label: string }) => {
+      chosenStart = s.start;
+      timeField.value = s.label;
+      go.textContent = 'Book ' + s.label;
+      onPick(s);
     };
     prevBtn.addEventListener('click', () => {
       if (idx > 0) {
@@ -649,6 +677,12 @@
       // Direct booking replaces the trip to Calendly.
       bubble.querySelector('.cmp-cal')?.remove();
       idx = 0;
+      // A time was agreed in conversation: arrive with it already selected,
+      // in view, and the button armed to book it.
+      if (wantedMinutes !== null) {
+        const match = days[idx].slots.find((s) => slotMinutes(s.start) === wantedMinutes);
+        if (match) select(match);
+      }
       timeField.insertAdjacentElement('afterend', wrap);
       render();
     });
@@ -695,7 +729,7 @@
       const timeField = bubble.querySelector<HTMLInputElement>('.cmp-f-time');
       const goBtn = bubble.querySelector<HTMLButtonElement>('.cmp-go');
       if (timeField && goBtn) {
-        buildSlotPicker(bubble, timeField, goBtn, preferredDate, (s) => {
+        buildSlotPicker(bubble, timeField, goBtn, preferredDate, preferredTime, (s) => {
           chosenSlot = s;
         });
       }
