@@ -42,11 +42,11 @@ export const POST: APIRoute = async ({ request }) => {
   if (!apiKey) return json(503, { error: 'Email is not configured yet.' });
 
   const resend = new Resend(apiKey);
-  // Until mindlynx.ai is verified in Resend, the onboarding sender can only
-  // deliver to the account owner. Defaulting to hello@ made every production
-  // submit 502 when CONTACT_TO was unset; fail safe to the deliverable inbox.
+  // mindlynx.ai is verified in Resend (2026-07-29), so hello@ sends for real.
+  // Notifications still land in the founder inbox by default; set CONTACT_TO
+  // to hello@mindlynx.ai once that Workspace mailbox is confirmed receiving.
   const to = import.meta.env.CONTACT_TO ?? 'jsnyman@1digit.co.uk';
-  const from = import.meta.env.CONTACT_FROM ?? 'MindLynx <onboarding@resend.dev>';
+  const from = import.meta.env.CONTACT_FROM ?? 'MindLynx <hello@mindlynx.ai>';
 
   const subject = {
     albion: `Albion waitlist · ${name}`,
