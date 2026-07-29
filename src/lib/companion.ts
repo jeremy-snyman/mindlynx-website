@@ -4,10 +4,14 @@
    in-memory map. */
 
 import PACK from '../content/companion-pack.md?raw';
+import SITES from '../content/companion-sites.md?raw';
 
 // Parts A to D go to the model. Part E is implementation reference and must
 // stay out of Vera's context (it names the filter tokens and site-copy gaps).
-export const CONTEXT_PACK = PACK.split('\n# Part E')[0];
+// The sites reference is separate from Jeremy's authored script: a condensed,
+// faithful snapshot of what the three sites publish (including the privacy
+// policies), refreshed here whenever the site copy changes.
+export const CONTEXT_PACK = PACK.split('\n# Part E')[0] + '\n\n' + SITES;
 
 // Part E "site variable": selects emphasis and default next step, not knowledge.
 export const SITE_SUFFIX = `
