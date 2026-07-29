@@ -132,8 +132,9 @@ export const ACTION_TOOL = {
         preferredDate: {
           type: 'STRING',
           description:
-            'For scoping_call: the day the visitor wants, strictly YYYY-MM-DD computed from ' +
-            "today's date. The on-screen slot choices start from this day. Empty if no preference.",
+            'For scoping_call: the day the visitor most recently agreed, strictly YYYY-MM-DD ' +
+            "computed fresh from today's date every time. Never reuse a day from earlier in the " +
+            'conversation once the visitor has changed it. The on-screen calendar opens on this day.',
         },
       },
       required: ['intent', 'name', 'email'],
