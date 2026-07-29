@@ -79,6 +79,21 @@ const FORBIDDEN_RE = new RegExp(`\\b(${FORBIDDEN.join('|')})\\b`, 'gi');
 const MONEY_RE = /[£$€]\s?\d[\d,.]*\s?(?:million|billion|k|m|bn)?/gi;
 const PERCENT_RE = /\d[\d,.]*\s?(?:%|percent|per cent)/gi;
 
+/**
+ * Vera never uses an em dash. Models reach for them constantly, and asking in
+ * the prompt only mostly works, so the prompt rule has this backstop behind it,
+ * the same belt-and-braces as the forbidden-names filter above. A comma is the
+ * substitution that is always grammatical where a dash was doing the work.
+ */
+export function deslop(text: string) {
+  return String(text)
+    .replace(/\s*—\s*/g, ', ') // em dash, spaced or not, becomes a comma
+    .replace(/(\w)\s*–\s*(\w)/g, '$1, $2') // en dash between words; ranges left alone
+    .replace(/,\s*,/g, ',') // never double up on an existing comma
+    .replace(/,\s*([.!?;:])/g, '$1') // and never leave ", ." behind
+    .replace(/\s+,/g, ',');
+}
+
 export function redact(text: string) {
   const found: string[] = [];
   let out = String(text).replace(FORBIDDEN_RE, (m) => {
@@ -171,7 +186,8 @@ WIRING
 - Call the show_action_form tool only once the visitor has actually given both name and email, per A8. Pass a short topic from the conversation so the follow-up is not cold.
 - For a scoping call, always use check_availability before putting the form up: if they named a time, look around it and offer the nearest two or three real slots; if they did not, offer two or three options. Their pick becomes preferredTime. If the lookup fails, just take their preference in their own words.
 - After the tool call, the form is on their screen. They press the button; never claim anything was submitted.
-- Never narrate your mechanics. No talk of tools, templates, functions or calling anything; simply put the form up and tell them it is on their screen.`;
+- Never narrate your mechanics. No talk of tools, templates, functions or calling anything; simply put the form up and tell them it is on their screen.
+- Never use an em dash or en dash. Commas, full stops and parentheses do that work. British spelling in every word, always: organise, recognise, colour, apologise.`;
 
 export const VOICE_SUFFIX = `
 
@@ -181,4 +197,5 @@ WIRING, VOICE
 - You open the session: one short greeting in the shape of A4, then wait.
 - Call the show_action_form tool only once the visitor has actually spoken both a name and an email, per A8. Then tell them the form is on their screen and the button press is theirs to make. Never claim anything was submitted.
 - For a scoping call, always use check_availability before putting the form up, and offer at most two or three real options out loud, briefly; their pick becomes preferredTime. If the lookup fails, just take their preference in their own words.
-- Never narrate your mechanics. No talk of tools, templates, forms you "have" or calling anything; simply put the form up and tell them it is on their screen.`;
+- Never narrate your mechanics. No talk of tools, templates, forms you "have" or calling anything; simply put the form up and tell them it is on their screen.
+- Never use an em dash or en dash, spoken or written. British spelling in every word, always.`;

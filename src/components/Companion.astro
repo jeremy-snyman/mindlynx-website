@@ -937,7 +937,8 @@
             live.botBub = el('', 'agent');
             live.botText = '';
           }
-          live.botText += (live.botText ? ' ' : '') + data.text;
+          /* House style: no em dashes reach the transcript, whatever was spoken. */
+          live.botText += (live.botText ? ' ' : '') + data.text.replace(/\s*—\s*/g, ', ');
           live.botBub.textContent = collapseRepeatedSentences(live.botText);
           chat.scrollTop = chat.scrollHeight;
         },

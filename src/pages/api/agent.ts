@@ -10,6 +10,7 @@ import {
   TOOL_SUFFIX,
   clean,
   clientIp,
+  deslop,
   rateLimit,
   redact,
   type Intent,
@@ -249,7 +250,7 @@ export const POST: APIRoute = async ({ request, clientAddress }) => {
     const { reply, action } = ANTHROPIC_API_KEY
       ? await callClaude(message, body.history)
       : await callGemini(message, body.history);
-    const filtered = redact(reply);
+    const filtered = redact(deslop(reply));
     if (filtered.found.length) {
       console.warn('[companion] redacted:', filtered.found.join(','), 'ip:', ip);
     }
