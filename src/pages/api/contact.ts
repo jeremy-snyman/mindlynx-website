@@ -98,5 +98,47 @@ export const POST: APIRoute = async ({ request }) => {
       .catch(() => {});
   }
 
+  // Best-effort acknowledgement to the visitor. Deliverable only once
+  // mindlynx.ai is verified in Resend; until then it fails quietly and the
+  // submission itself is unaffected.
+  const ackFrom = import.meta.env.CONTACT_ACK_FROM ?? 'MindLynx <hello@mindlynx.ai>';
+  const ack = {
+    albion: {
+      subject: "You're on the Albion waitlist",
+      line: 'You are on the Albion waitlist. What people tell us here shapes which sector edition gets built first, so you will hear from us the moment there is news.',
+    },
+    helix: {
+      subject: "You're on the Helix waiting list",
+      line: 'You are on the Helix waiting list. You will hear from us the moment there is news.',
+    },
+    contributor: {
+      subject: "You're on the Albion contributor register",
+      line: 'You are on the Albion contributor register. When your sector opens, we come back to you with the terms in plain English.',
+    },
+    call: {
+      subject: 'Your scoping call request',
+      line: 'Your scoping call request is with the team. If a time was not already booked on screen, we will reply with times shortly.',
+    },
+    partner: {
+      subject: 'Your design partner conversation',
+      line: 'Thank you. The team will come back to you to set up the conversation properly.',
+    },
+    general: {
+      subject: "We've got your message",
+      line: 'Thanks for getting in touch. Someone from the team will come back to you properly.',
+    },
+  }[interest]!;
+  const unsubNote = consented
+    ? '<p style="color:#666;font-size:12px">You opted in to email updates for this list. You can unsubscribe or withdraw at any time.</p>'
+    : '';
+  await resend.emails
+    .send({
+      from: ackFrom,
+      to: email,
+      subject: ack.subject,
+      html: `<p>Hello ${esc(name.split(' ')[0])},</p><p>${ack.line}</p><p>The MindLynx team</p>${unsubNote}`,
+    })
+    .catch(() => {});
+
   return json(200, { ok: true });
 };

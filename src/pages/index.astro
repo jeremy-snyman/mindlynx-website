@@ -111,7 +111,6 @@ const description =
             <a class="button button-quiet" href="#what" data-track="hero-what">See what we build</a>
           </div>
         </div>
-        <a class="scroll-cue" href="#why">Discover <span class="scroll-line" aria-hidden="true"></span></a>
       </section>
 
       <!-- Statement -->
@@ -383,20 +382,31 @@ const description =
       setScrolled();
 
       const toggle = document.querySelector<HTMLButtonElement>('.menu-toggle')!;
-      toggle.addEventListener('click', () => {
-        const open = document.body.classList.toggle('menu-open');
+      // iOS ignores overflow:hidden for touch scrolling, so the open menu pins
+      // the body in place and the close restores the scroll position.
+      let menuScrollY = 0;
+      const setMenu = (open: boolean) => {
+        document.body.classList.toggle('menu-open', open);
         toggle.setAttribute('aria-expanded', String(open));
-      });
+        if (open) {
+          menuScrollY = window.scrollY;
+          document.body.style.position = 'fixed';
+          document.body.style.top = `-${menuScrollY}px`;
+          document.body.style.width = '100%';
+        } else {
+          document.body.style.position = '';
+          document.body.style.top = '';
+          document.body.style.width = '';
+          window.scrollTo(0, menuScrollY);
+        }
+      };
+      toggle.addEventListener('click', () => setMenu(!document.body.classList.contains('menu-open')));
       document.querySelectorAll('.site-nav a').forEach((a) =>
-        a.addEventListener('click', () => {
-          document.body.classList.remove('menu-open');
-          toggle.setAttribute('aria-expanded', 'false');
-        })
+        a.addEventListener('click', () => setMenu(false))
       );
       addEventListener('keydown', (e) => {
         if (e.key === 'Escape' && document.body.classList.contains('menu-open')) {
-          document.body.classList.remove('menu-open');
-          toggle.setAttribute('aria-expanded', 'false');
+          setMenu(false);
           toggle.focus();
         }
       });

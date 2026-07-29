@@ -85,6 +85,20 @@ button, a { -webkit-tap-highlight-color: transparent; }
   backdrop-filter: blur(16px);
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 }
+/* With the menu open the header must NOT carry a backdrop-filter: a filtered
+   ancestor becomes the containing block for fixed descendants, which squashed
+   the full-screen .site-nav overlay into the 70px header once scrolled. The
+   overlay's own ink covers the page, so the header losing its wash is unseen. */
+body.menu-open .site-header {
+  background: transparent;
+  backdrop-filter: none;
+  border-color: transparent;
+}
+/* Nothing floats above the open menu. */
+body.menu-open .cookie-notice,
+body.menu-open .cmp-launcher {
+  display: none;
+}
 .brand {
   display: inline-flex;
   align-items: center;
@@ -209,22 +223,6 @@ button, a { -webkit-tap-highlight-color: transparent; }
 .button-primary:hover { background: #e3bd7e; }
 .button-quiet { background: rgba(0, 0, 0, 0.12); backdrop-filter: blur(8px); }
 .button-quiet:hover { background: rgba(247, 241, 229, 0.09); border-color: rgba(247, 241, 229, 0.6); }
-.scroll-cue {
-  position: absolute;
-  z-index: 2;
-  /* 108px clears the fixed companion launcher (24px inset + 60px circle + gap). */
-  right: max(108px, calc((100vw - 1180px) / 2));
-  bottom: 31px;
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  text-decoration: none;
-  font-size: 0.72rem;
-  text-transform: uppercase;
-  letter-spacing: 0.15em;
-  color: rgba(247, 241, 229, 0.66);
-}
-.scroll-line { display: inline-block; width: 54px; height: 1px; background: var(--warm); }
 
 /* ── Statement (light) ──────────────────────────────────── */
 .section-light { background: var(--paper); color: var(--text); }
@@ -700,8 +698,6 @@ h2 {
   .open-build { padding: 96px 0; }
   .contact { padding: 110px 0 96px; }
   .hero-actions { flex-direction: column; align-items: stretch; max-width: 340px; }
-  /* Centred on phones: the only signal that content exists below a 100svh hero. */
-  .scroll-cue { right: 50%; transform: translateX(50%); bottom: 16px; }
   /* Inline CTAs keep their visual size but gain a 44px thumb target. */
   .company-link, .partner-link, .contact-mail, .site-footer a {
     padding-block: 14px;
@@ -752,7 +748,10 @@ h2 {
     inset: 0;
     z-index: 35;
     flex-direction: column;
-    justify-content: center;
+    /* `safe` so a short viewport scrolls instead of clipping the first link. */
+    justify-content: safe center;
+    overflow-y: auto;
+    padding-block: 100px 40px;
     gap: 34px;
     background: rgba(7, 17, 15, 0.96);
     backdrop-filter: blur(18px);
