@@ -31,6 +31,22 @@ export const INTENTS = [
 ] as const;
 export type Intent = (typeof INTENTS)[number];
 
+/* ---------------- the calendar ----------------
+   The next fortnight in London time, as a lookup table. Models reliably get
+   weekday arithmetic wrong ("next Monday would be the 4th of August, which is
+   actually a Tuesday" happened live on Albion), so no brain is ever asked to
+   compute a weekday: today, tomorrow and the next Monday are things to READ. */
+export function ukCalendar(days = 14) {
+  const iso = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/London', year: 'numeric', month: '2-digit', day: '2-digit' });
+  const words = new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/London', weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+  const lines: string[] = [];
+  for (let i = 0; i < days; i++) {
+    const d = new Date(Date.now() + i * 86_400_000);
+    lines.push(`${i === 0 ? 'Today: ' : i === 1 ? 'Tomorrow: ' : ''}${words.format(d)} = ${iso.format(d)}`);
+  }
+  return `CALENDAR (Europe/London)\n${lines.join('\n')}\nUse this calendar for every date and weekday; never work a weekday out yourself. "Next Monday" is the first Monday after today in this list. If a requested day has no bookable slots, say that day has nothing free and offer the nearest day that does.`;
+}
+
 /* ---------------- rate limiter (in-memory sliding window) ---------------- */
 const LIMITS = {
   chat: { max: 20, windowMs: 60_000 },

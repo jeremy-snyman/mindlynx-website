@@ -11,6 +11,7 @@ import {
   clean,
   clientIp,
   deslop,
+  ukCalendar,
   rateLimit,
   redact,
   type Intent,
@@ -63,8 +64,7 @@ async function geminiParts(contents: unknown[]): Promise<any[]> {
       systemInstruction: {
         parts: [{
           text:
-            CONTEXT_PACK + SITE_SUFFIX + TOOL_SUFFIX +
-            `\n\nToday is ${new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', timeZone: 'Europe/London' })}.`,
+            CONTEXT_PACK + SITE_SUFFIX + TOOL_SUFFIX + `\n\n${ukCalendar()}`,
         }],
       },
       contents,
@@ -181,7 +181,7 @@ async function claudeCreate(messages: any[]): Promise<any> {
       // so "next Monday" can become a real ISO date without breaking the cache.
       system: [
         { type: 'text', text: CONTEXT_PACK + SITE_SUFFIX + TOOL_SUFFIX, cache_control: { type: 'ephemeral' } },
-        { type: 'text', text: `Today is ${new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', timeZone: 'Europe/London' })}.` },
+        { type: 'text', text: ukCalendar() },
       ],
       tools: CLAUDE_TOOLS,
       messages,

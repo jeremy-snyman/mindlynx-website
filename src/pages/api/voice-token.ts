@@ -2,7 +2,7 @@ export const prerender = false;
 
 import { createHmac } from 'node:crypto';
 import type { APIRoute } from 'astro';
-import { CONTEXT_PACK, SITE_SUFFIX, VOICE_SUFFIX, clientIp, rateLimit } from '../../lib/companion';
+import { CONTEXT_PACK, SITE_SUFFIX, VOICE_SUFFIX, clientIp, rateLimit, ukCalendar } from '../../lib/companion';
 
 // Voice runs on the Helix Pipecat service (Deepgram STT -> Gemini -> Cartesia
 // TTS over WebRTC). We mint a short-lived HMAC-signed payload carrying Vera's
@@ -34,8 +34,7 @@ export const POST: APIRoute = async ({ request, clientAddress }) => {
   const payload = Buffer.from(
     JSON.stringify({
       instructions:
-        CONTEXT_PACK + SITE_SUFFIX + VOICE_SUFFIX +
-        `\n\nToday is ${new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', timeZone: 'Europe/London' })}.`,
+        CONTEXT_PACK + SITE_SUFFIX + VOICE_SUFFIX + `\n\n${ukCalendar()}`,
       voiceId: VERA_VOICE_ID,
       voiceSpeed: VERA_VOICE_SPEED,
       // Where the voice service reads scoping-call slots from (public, no secrets).
