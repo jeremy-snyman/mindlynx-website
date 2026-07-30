@@ -8,6 +8,14 @@ const EVENT_TYPE = import.meta.env.CALENDLY_EVENT_TYPE ?? ''; // optional: full 
 export type Slot = { start: string; label: string; schedulingUrl: string };
 
 let eventTypeUri = EVENT_TYPE;
+/* The event type's configured location, passed through on every direct booking.
+   Calendly's POST /invitees REQUIRES a top-level `location` matching the event
+   type's configuration; omitted, every booking 400s with "Specified location
+   kind is not configured for this event type" — which is why, until 2026-07-30,
+   no booking had ever landed from any site. (The error names
+   `event.location_configuration.kind`, but the field the API actually wants is
+   top-level `location: {kind, location}` — proven against the live API.) */
+let eventTypeLocation: { kind: string; location?: string } | null = null;
 let cache: { key: string; at: number; slots: Slot[] } | null = null;
 
 const api = (path: string) =>
@@ -28,7 +36,13 @@ async function resolveUserUri(): Promise<string> {
 }
 
 async function resolveEventType(): Promise<string> {
-  if (eventTypeUri) return eventTypeUri;
+  if (eventTypeUri && eventTypeLocation) return eventTypeUri;
+  if (eventTypeUri) {
+    // A pinned event type still needs its location for direct booking.
+    const one = await api(`/event_types/${eventTypeUri.split('/').pop()}`);
+    if (one.ok) rememberLocation((await one.json()).resource);
+    return eventTypeUri;
+  }
   const userUri = await resolveUserUri();
   const et = await api(`/event_types?user=${encodeURIComponent(userUri)}&active=true`);
   if (!et.ok) throw new Error(`calendly event_types ${et.status}`);
@@ -37,7 +51,15 @@ async function resolveEventType(): Promise<string> {
   // Prefer the 30-minute meeting; otherwise whatever is first.
   const pick = types.find((t) => /30/.test(t.slug ?? '') || /30/.test(t.name ?? '')) ?? types[0];
   eventTypeUri = pick.uri;
+  rememberLocation(pick);
   return eventTypeUri;
+}
+
+function rememberLocation(eventType: any): void {
+  const loc = eventType?.locations?.[0];
+  if (loc?.kind) {
+    eventTypeLocation = { kind: loc.kind, ...(loc.location ? { location: loc.location } : {}) };
+  }
 }
 
 const label = (iso: string) =>
@@ -64,6 +86,8 @@ export async function bookSlot(start: string, name: string, email: string) {
       event_type: uri,
       start_time: start,
       invitee: { name, email, timezone: 'Europe/London' },
+      // Without this, Calendly refuses every direct booking — see above.
+      ...(eventTypeLocation ? { location: eventTypeLocation } : {}),
     }),
     signal: AbortSignal.timeout(10_000),
   });

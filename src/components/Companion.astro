@@ -791,6 +791,12 @@
             body: JSON.stringify({ start: chosenSlot.start, name: n, email: e }),
           }).then((r) => {
             if (r.ok) {
+              /* On a voice call, tell the service too: the tool call ended long
+                 before the button press, so without this Vera never learns the
+                 booking landed — she now confirms it out loud. */
+              if (live.client) {
+                try { live.client.sendClientMessage('booking_confirmed', { label: chosenSlot!.label }); } catch {}
+              }
               return submitContact(
                 copy.messageLead + (topicText ? ' About: ' + topicText + '.' : '') + ' BOOKED: ' + chosenSlot!.label + '.',
                 "that's booked for " + esc(chosenSlot!.label) + '. The calendar invite is on its way to your inbox.'
