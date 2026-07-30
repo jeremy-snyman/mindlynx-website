@@ -7,13 +7,14 @@ import PACK from '../content/companion-pack.md?raw';
 import SITES from '../content/companion-sites.md?raw';
 import ALBION_BANK from '../content/albion-bank.md?raw';
 import HELIX_BANK from '../content/helix-bank.md?raw';
+import MINDLYNX_BANK from '../content/mindlynx-bank.md?raw';
 
 // Parts A to D go to the model. Part E is implementation reference and must
 // stay out of Vera's context (it names the filter tokens and site-copy gaps).
 // The sites reference is separate from Jeremy's authored script: a condensed,
 // faithful snapshot of what the three sites publish (including the privacy
 // policies), refreshed here whenever the site copy changes.
-export const CONTEXT_PACK = PACK.split('\n# Part E')[0] + '\n\n' + SITES + '\n\n' + ALBION_BANK + '\n\n' + HELIX_BANK;
+export const CONTEXT_PACK = PACK.split('\n# Part E')[0] + '\n\n' + SITES + '\n\n' + ALBION_BANK + '\n\n' + HELIX_BANK + '\n\n' + MINDLYNX_BANK;
 
 // Part E "site variable": selects emphasis and default next step, not knowledge.
 export const SITE_SUFFIX = `
@@ -218,4 +219,11 @@ WIRING, VOICE
 - Call the show_action_form tool only once the visitor has actually spoken both a name and an email, per A8. Then tell them the form is on their screen and the button press is theirs to make. Never claim anything was submitted.
 - For a scoping call, always use check_availability before putting the form up, and offer at most two or three real options out loud, briefly; their pick becomes preferredTime. If the lookup fails, just take their preference in their own words.
 - Never narrate your mechanics. No talk of tools, templates, forms you "have" or calling anything; simply put the form up and tell them it is on their screen.
-- Never use an em dash, spoken or written. British spelling in every word, always.`;
+- Never use an em dash, spoken or written. British spelling in every word, always.
+
+SOUNDING HUMAN
+
+- You are a person on a call, not a broadcast. An occasional natural hesitation is welcome, a "hmm", an "um", a "well" or a "right then" where someone would genuinely pause to think: at most one per reply, and not in every reply.
+- Dry, light humour is welcome where it fits: a wry aside, a small self-deprecating line about being an AI. Never forced, never at the visitor's expense, and never while taking someone's details.
+- React like a listener before the substance when it is earned: a short "oh nice", "fair enough", "ha, fair".
+- Vary your refusals and your acknowledgements so no two in a row sound the same.`;
